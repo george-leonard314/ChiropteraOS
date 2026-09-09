@@ -17,6 +17,9 @@ depends=(
   # System tools the config and keybinds use
   'btop' 'fastfetch' 'wl-clipboard' 'cliphist' 'hyprpicker' 'grim' 'slurp'
   'brightnessctl' 'ddcutil' 'trash-cli' 'inotify-tools' 'polkit-gnome' 'gnome-keyring'
+  # App launching and input tools the keybinds route through
+  # AUR today; the ChiropteraOS repo will carry it (see docs/upstream-sync.md and the CI step).
+  'app2unit' 'ydotool' 'qps' 'pavucontrol'
   # Audio, network, bluetooth
   'pipewire' 'pipewire-pulse' 'pipewire-alsa' 'wireplumber' 'networkmanager' 'bluez' 'bluez-utils'
   # Look and feel
@@ -31,5 +34,6 @@ optdepends=('thunar: file manager'
             'obsidian: notes'
             'superproductivity: todo'
             'noctalia-greeter: greetd login screen themed by the shell'
-            'nwg-displays: monitor layout editor')
+            'nwg-displays: monitor layout editor'
+            'gitkraken: git client, bound to Super+G')
 provides=('chiroptera-meta')
