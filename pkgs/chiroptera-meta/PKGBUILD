@@ -20,7 +20,8 @@ depends=(
   # Audio, network, bluetooth
   'pipewire' 'pipewire-pulse' 'pipewire-alsa' 'wireplumber' 'networkmanager' 'bluez' 'bluez-utils'
   # Look and feel
-  'adw-gtk-theme' 'papirus-icon-theme' 'qt5ct-kde' 'qt6ct-kde'
+  # Repo names, not the AUR -kde variants: those provide these, so both satisfy it.
+  'adw-gtk-theme' 'papirus-icon-theme' 'qt5ct' 'qt6ct'
   'ttf-jetbrains-mono-nerd' 'noto-fonts' 'noto-fonts-cjk' 'noto-fonts-emoji'
   'ttf-material-symbols-variable'
   # Sound effects used by the fish error hook
