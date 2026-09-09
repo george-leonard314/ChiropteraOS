@@ -761,8 +761,10 @@ These cannot be automated. Ask the user to confirm, and record their answers in 
 Rollback if anything is broken:
 
 ```bash
+# Backups are timestamped, one per run per path; restore the newest.
 for p in ~/.config/{hypr,fish,foot,btop,fastfetch,starship.toml,uwsm}; do
-  [ -e "$p.pre-dots" ] && { rm -rf "$p"; mv "$p.pre-dots" "$p"; }
+  b=$(ls -dt "$p".pre-dots-* 2>/dev/null | head -1) || true
+  [ -n "$b" ] && { rm -rf "$p"; cp -a "$b" "$p"; echo "restored $p from $b"; }
 done
 hyprctl reload; pkill -x chiroptera; chiroptera --daemon
 ```
