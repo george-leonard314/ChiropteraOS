@@ -1,0 +1,11 @@
+# Editor lock files
+.~lock.*#
+
+# Subagent-driven-development scratch (ledger, briefs, review packages)
+.superpowers/
+
+# makepkg output
+pkgs/*/src/
+pkgs/*/pkg/
+pkgs/*/*.pkg.tar.*
+pkgs/*/*.log
