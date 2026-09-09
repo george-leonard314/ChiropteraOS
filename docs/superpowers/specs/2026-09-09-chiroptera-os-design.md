@@ -14,183 +14,169 @@ Performance targets CachyOS: the same kernel, the same optimized package
 repositories, and the same system tuning, consumed from their repos rather
 than rebuilt.
 
-Chiroptera Shell is a Quickshell desktop shell derived from caelestia-shell,
-with a top bar, two sidebars, and a workspace overview ported from end-4's
-illogical-impulse dotfiles.
+Chiroptera Shell is a rebrand of Noctalia v5, a native C++ Wayland desktop
+shell (no Qt, no GTK) with a TOML config, a settings GUI, and Luau plugins.
+Chosen after a measured spike against the Quickshell-based caelestia-shell on
+the author's laptop: 0.29 s versus 3.1 s to first bar, 183 MB versus 533 MB
+proportional memory at start. Chiroptera's identity lives in the theme, the
+bar composition, its own plugins (an AI sidebar first), and later native
+additions to the C++ core.
 
 Non-goals for the first release: multi-user branding beyond the author, a
-public website, secure boot, non-x86_64 targets.
+public website, secure boot, non-x86_64 targets, a workspace overview with
+live window thumbnails (Noctalia has none; Hyprland's own overview covers it).
 
 ## 2. Decisions taken
 
 | Question | Decision |
 |---|---|
-| Shell origin | Copy of caelestia-shell with an `upstream` git remote. Not a GitHub fork. |
-| Bar layout | Horizontal top bar in the end-4 style. Left bar disabled by default. |
-| end-4 parts ported | Right sidebar, left AI sidebar, workspace overview. |
+| Shell base | Noctalia v5 (C++, MIT), copied with full history and an `upstream` git remote. Not a GitHub fork. Replaces the earlier caelestia-shell decision after the spike. |
+| Rename scope | Every `noctalia` token becomes `chiroptera`: binary, config and state dirs, IPC, D-Bus names, layer namespaces, env vars, UI strings, docs. Upstream domains, org names, and the greeter package name are preserved. |
+| Plugin API | `chiroptera.*` is the Luau global; `noctalia.*` stays as an alias to the same table so all existing plugins keep working. |
+| Bar layout | Horizontal top bar. Noctalia's bar is composed from widgets; the end-4 look is a bar configuration plus theme, not code. |
+| end-4 parts | Right sidebar: Noctalia's built-in control center. Left AI sidebar: a Chiroptera Luau panel plugin. Workspace overview: dropped (see non-goals). |
 | ISO experience | Live desktop with Chiroptera Shell running and an install button. |
 | Installer | Calamares. |
+| Login screen | noctalia-greeter (greetd) consumed as-is for now; rebrand is a later step. |
 | Package delivery | Signed pacman repo. GitHub Pages now, own Gitea Arch registry later. |
 | Hardware target | Generic with hardware detection. |
-| Repo layout | Three repos: chiroptera-shell, chiroptera-dots, ChiropteraOS. |
-| Upstream tracking | Optional. A sync script plus a weekly assisted review. Never automatic. |
+| Repo layout | Three repos: chiroptera-shell (Noctalia copy), chiroptera-dots (the author's own dotfiles), ChiropteraOS. |
+| Dotfiles | Start from the configs on the author's laptop. No caelestia upstream; caelestia is out of the picture entirely. |
+| Upstream tracking | Optional. Deterministic rename transform re-applied after each merge. Never automatic. |
 | Performance | Consume the CachyOS repositories: kernel, optimized v3/v4 packages, cachyos-settings, ananicy-cpp. Stock `linux` kept as fallback. |
 
 ## 3. Repositories
 
 ### 3.1 chiroptera-shell
 
-Copy of caelestia-shell's source tree. Remotes: `origin` is the author's
-hosting (GitHub now, Gitea later), `upstream` is
-`https://github.com/caelestia-dots/shell`.
+Full-history copy of `https://github.com/noctalia-dev/noctalia` (v5, C++23,
+Meson, MIT). Remotes: `origin` is the author's hosting (GitHub now, Gitea
+later), `upstream` is Noctalia, fetch only, no tags.
 
-Installs to `/etc/xdg/quickshell/chiroptera/`. Started with
-`chiroptera shell -d` or `qs -c chiroptera`. Can coexist with caelestia-shell
-during the transition.
+The rename transform `chiroptera/rename.sh` turns the tree into Chiroptera
+Shell; `chiroptera/check-rename.sh` asserts nothing non-allowlisted survives.
+Binary `chiroptera`, config `~/.config/chiroptera/config.toml`, state
+`~/.local/state/chiroptera/`, assets `/usr/share/chiroptera/`, IPC
+`chiroptera msg ...`, D-Bus prefix `dev.chiroptera.`, layer namespaces
+`chiroptera-*`, env vars `CHIROPTERA_*`, desktop entry
+`dev.chiroptera.Chiroptera.desktop`.
+
+Preserved verbatim: `noctalia-dev` (GitHub org in plugin-source and upstream
+URLs), `noctalia.dev` and `api.noctalia.dev` (upstream domains and API
+endpoints), `noctalia-greeter` (a separate package this shell talks to), plugin
+ids of the form `noctalia/<plugin>` (author namespace of official plugins),
+and any line carrying `<!-- keep -->`. The Luau host registers the API table
+under both `chiroptera` and `noctalia`.
 
 ### 3.2 chiroptera-dots
 
-Copy of the caelestia dotfiles repo and the caelestia-cli repo, merged into one
-tree:
+The author's own dotfiles, captured from the laptop: Hyprland config (legacy
+`.conf` layout as currently used, with Chiroptera IPC binds replacing the
+caelestia global shortcuts), fish, foot, starship, btop, fastfetch, and the
+Chiroptera Shell `config.toml`. No upstream remote. Personal files never
+enter it: no `monitors.conf`, keys, tokens, history.
 
 ```
 chiroptera-dots/
-  cli/          Python package `chiroptera`, renamed from caelestia-cli
-  hypr/         Hyprland config split into hyprland/*.conf
-  fish/ foot/ starship.toml btop/ fastfetch/ ...
-  install.fish  local install script for development machines
+  hypr/            hyprland.conf + hyprland/*.conf
+  chiroptera/      config.toml, palettes/, plugins/ (the author's plugins)
+  fish/ foot/ starship.toml btop/ fastfetch/
+  scripts/apply.sh   copies into $XDG_CONFIG_HOME without clobbering changed files
 ```
-
-Remotes: `origin` the author's, `upstream-dots` caelestia-dots/caelestia,
-`upstream-cli` caelestia-dots/cli.
 
 ### 3.3 ChiropteraOS (this repo)
 
 ```
 ChiropteraOS/
   pkgs/<name>/PKGBUILD        one directory per package
-  calamares/
-    branding/chiroptera/      slideshow, logo, strings
-    modules/*.conf            module configuration
-    settings.conf             module sequence
+  calamares/                  branding, modules, settings
   iso/                        archiso profile, based on releng
-    airootfs/                 files copied into the live root
-    packages.x86_64
-    profiledef.sh
   scripts/                    build helpers, hardware detection tests
   .github/workflows/          packages, iso, nightly tests
-  docs/                       this spec, install checklist, sync ritual
+  docs/                       specs, plans, sync ritual, checklists
 ```
 
 ### 3.4 Upstream sync
 
-Each source repo has `scripts/sync-upstream.sh`. It fetches every
-`upstream*` remote and prints the commits since the recorded last sync,
-grouped by top-level directory, with a marker for files the author has
-modified. It never merges.
-
-A weekly scheduled routine runs the script, reads the output, and reports:
-changes worth taking, changes that touch author-modified files, changes to
-ignore. The author approves before anything is applied. The last-sync commit
-is recorded in `.upstream-sync` in each repo.
+`chiroptera-shell` carries the deterministic transform and its check. Syncing
+applies the transform to upstream's tree on a branch and merges that, so the
+rename itself never conflicts; only upstream edits adjacent to renamed text
+do. The ritual is written in `docs/upstream-sync.md`. Nothing is automatic:
+the author decides when an upstream change is worth taking. The last merged
+upstream commit is recorded in `.upstream-sync`.
 
 Moving hosting to Gitea is `git remote set-url origin` per repo plus a CI
-target change. Nothing else references the hosting provider.
+target change.
 
 ## 4. Chiroptera Shell
 
-### 4.1 Layout
+### 4.1 What the rename touches
 
-Upstream structure is kept: `modules/` for UI, `services/` for system state,
-`config/` for the JSON schema, `utils/` for helpers, `assets/` for icons and
-fonts. Upstream files are edited only where a hook is needed to mount a new
-module. All new code lives in new directories:
+Noctalia's source has about 5,000 mentions of its name across 580 files:
+Meson project and targets, C++ identifiers, D-Bus interface names
+(`dev.noctalia.Mpris`, `dev.noctalia.Noctalia`, and others), XDG directory
+names, env vars (`NOCTALIA_STATE_HOME`, `NOCTALIA_WALLPAPER_PATH`, and
+others used by hooks and templates), the Luau API table, translations, docs,
+the desktop entry, the logo and font asset file names, and the tests. The
+transform renames all of it except the preserved names in 3.1, then the
+existing Meson test suite must pass and the shell must start under Hyprland.
 
-```
-modules/topbar/         horizontal bar
-modules/sidebar-right/  quick settings, calendar, notifications
-modules/sidebar-left/   AI chat, translator, utilities
-modules/overview/       workspace grid
-```
+### 4.2 Plugin API alias
 
-The upstream left bar stays in the tree and is disabled by config.
+`src/scripting/luau_host.cpp` registers the base library under `chiroptera`
+and additionally binds the global `noctalia` to the same table. Plugin
+manifests keep their `plugin_api` levels; `docs/plugin-api.json` is renamed
+in content only. Official and community plugin sources stay at
+`github.com/noctalia-dev/...` and keep working unchanged.
 
-### 4.2 Top bar
+### 4.3 Bar and panels
 
-Full width at the top of every monitor. Left: workspace indicators. Center:
-clock and active window title. Right: system tray, network, bluetooth, audio,
-battery, and a button that opens the right sidebar. Reserves an exclusive zone
-so windows do not overlap it. Bar height, position (top or bottom), and
-which widgets appear are configurable.
+The top bar is Noctalia's bar configured in `config.toml`: workspaces left,
+clock and active window center, tray, network, bluetooth, audio, battery,
+and a control-center button right. The right sidebar is the built-in control
+center. Launcher, notifications, OSDs, lock screen, dock, window switcher,
+wallpaper manager, and settings GUI are Noctalia's, rebranded.
 
-### 4.3 Right sidebar
+### 4.4 Left AI sidebar (plugin)
 
-Slides in from the right edge on toggle or keybind. Contains quick toggles
-(wifi, bluetooth, do-not-disturb, night light), volume and brightness sliders,
-a calendar, and the notification list with clear-all. Reuses caelestia's
-existing services for audio, network, and notifications.
+A Chiroptera plugin, `chiroptera/ai_sidebar`, in the chiroptera-dots
+`chiroptera/plugins/` directory: a panel entry with a multiline input, a
+scrollable markdown transcript, provider and model selects, and a clear
+button. Streaming via `chiroptera.httpStream` against OpenAI-compatible
+endpoints and Ollama; API keys read from `~/.config/chiroptera/secrets.toml`
+(mode 0600), never from `config.toml`. A control-center shortcut and a bar
+widget toggle it. Plugin-level settings: providers, default model, system
+prompt.
 
-### 4.4 Left AI sidebar
+### 4.5 Theme and branding
 
-Slides in from the left edge. Tabs: chat, translator, utilities. Chat supports
-multiple providers configured in the shell config; API keys are read from a
-file outside the repo (`~/.config/chiroptera/secrets.json`, mode 0600), never
-from the shell config. Ported from end-4's QML and adapted to caelestia's
-service layer.
+A Chiroptera palette under `~/.config/chiroptera/palettes/`, a logo replacing
+`assets/noctalia.svg` (now `assets/chiroptera.svg`), and the desktop entry
+name. Material You generation from the wallpaper stays Noctalia's.
 
-### 4.5 Workspace overview
+### 4.6 Later native work
 
-Keybind opens a grid of workspaces with live window thumbnails. Click focuses
-a window, drag moves it to another workspace, escape closes. Uses Hyprland's
-IPC through the existing Hyprland service.
-
-### 4.6 Configuration
-
-Defaults ship in the package. The JSON schema gains a `chiroptera` section:
-
-```json
-{
-  "chiroptera": {
-    "bar": { "position": "top", "height": 36, "widgets": { "left": [], "center": [], "right": [] } },
-    "sidebarLeft": { "width": 420, "providers": [] },
-    "sidebarRight": { "width": 380 },
-    "overview": { "columns": 5, "scale": 0.15 }
-  }
-}
-```
-
-User overrides live in `~/.config/chiroptera/shell.json` and are deep-merged
-over the defaults. Unknown keys log a warning and are ignored.
-
-### 4.7 Kept from caelestia unchanged
-
-Launcher, dashboard, on-screen displays, lock screen, session menu, wallpaper
-handling, Material You colour scheme generation.
+Anything the plugin API cannot express (new surfaces, custom drawing, new
+Wayland protocol use) is C++ in `chiroptera-shell`, kept in new files where
+possible to ease upstream merges. None is planned for the first release.
 
 ## 5. Dotfiles and user provisioning
 
-The `chiroptera-dots` package installs:
+The `chiroptera-dots` package installs `/usr/share/chiroptera/dots/` as the
+pristine tree and the same trees into `/etc/skel/.config/`, so users created
+by Calamares get them. `scripts/apply.sh` in the repo (installed as
+`/usr/bin/chiroptera-dots`) copies from the pristine tree into the current
+user's config without clobbering files that differ, and lists what it
+skipped; `--force` overwrites; `--diff` shows differences.
 
-- `/usr/share/chiroptera/dots/` pristine copy of every config tree.
-- `/etc/skel/.config/` the same trees, so new users get them on creation.
+Hyprland: the author's current `hyprland.conf` split, with `exec-once =
+chiroptera --daemon`, IPC binds (`chiroptera msg panel-toggle launcher`,
+`panel-toggle control-center`, `settings-toggle`, `window-switcher`, volume
+and brightness), the Chiroptera layer rules for blur, and the settings-window
+float rule. User overrides stay in `hypr/hyprland/user.conf`, sourced last.
 
-`chiroptera` CLI additions:
-
-- `chiroptera dots apply [--force]` copies from the pristine tree into the
-  current user's home. Without `--force`, files that differ from the pristine
-  copy are left alone and listed.
-- `chiroptera dots diff` shows differences between home and pristine.
-
-Existing caelestia CLI commands (shell, scheme, wallpaper, screenshot,
-record, clipboard, emoji, toggle, resizer) are kept with the new name.
-
-Hyprland config keeps the split into `hyprland/*.conf`. User overrides:
-`~/.config/chiroptera/hypr-user.conf` and `hypr-vars.conf`. The exec line
-becomes `exec-once = chiroptera shell -d`.
-
-Personal files never enter any repo: `monitors.conf`, keys, tokens, shell
-history, browser profiles. Each repo has a `.gitignore` covering these and a
-pre-commit hook that rejects files matching a secret pattern list.
+Personal files never enter any repo. Each repo has a `.gitignore` covering
+them and a pre-commit hook that rejects files matching a secret pattern list.
 
 ## 6. Packaging and the pacman repository
 
@@ -198,17 +184,16 @@ pre-commit hook that rejects files matching a secret pattern list.
 
 | Package | Source | Contents |
 |---|---|---|
-| chiroptera-shell | chiroptera-shell tag | Quickshell config under `/etc/xdg/quickshell/chiroptera` |
-| chiroptera-cli | chiroptera-dots tag | Python package and `chiroptera` executable |
-| chiroptera-dots | chiroptera-dots tag | `/usr/share/chiroptera/dots`, `/etc/skel` entries |
-| chiroptera-meta | none | depends on everything a desktop needs, including linux-cachyos, cachyos-settings, ananicy-cpp, scx-manager |
+| chiroptera-shell | chiroptera-shell tag | the `chiroptera` binary, `/usr/share/chiroptera/`, desktop entry, completions |
+| chiroptera-dots | chiroptera-dots tag | `/usr/share/chiroptera/dots`, `/etc/skel` entries, `chiroptera-dots` apply script |
+| chiroptera-meta | none | depends on everything a desktop needs, including linux-cachyos, cachyos-settings, ananicy-cpp, scx-manager, noctalia-greeter |
 | chiroptera-hwd | ChiropteraOS | hardware detection script and service |
 | chiroptera-calamares-config | ChiropteraOS | Calamares settings, modules, branding |
-| chiroptera-sddm-theme | ChiropteraOS | login screen theme |
-| rebuilt AUR deps | AUR | quickshell-git, calamares, and anything else caelestia-meta pulls from AUR |
+| rebuilt AUR deps | AUR | calamares, noctalia-greeter, and anything else the meta package pulls from AUR |
 
-Shell and dots PKGBUILDs pin a git tag. A release is: tag the source repo,
-bump `pkgver` in the PKGBUILD, push ChiropteraOS.
+The shell PKGBUILD pins a git tag and builds with Meson (`just` recipes are
+not required; plain `meson setup` and `meson install` suffice). A release is:
+tag the source repo, bump `pkgver` here, push ChiropteraOS.
 
 ### 6.2 CI
 
@@ -244,15 +229,15 @@ pointing step 5 at Gitea's Arch package registry.
 
 Based on archiso `releng`. Changes:
 
-- `packages.x86_64` adds hyprland, sddm, chiroptera-meta, chiroptera-shell,
-  chiroptera-dots, chiroptera-cli, chiroptera-hwd, calamares,
+- `packages.x86_64` adds hyprland, greetd, noctalia-greeter, chiroptera-meta,
+  chiroptera-shell, chiroptera-dots, chiroptera-hwd, calamares,
   chiroptera-calamares-config, linux-firmware, and the NVIDIA and AMD driver
   packages so the live session works on both.
 - `pacman.conf` for the build includes the chiroptera repo and the CachyOS
   base repo only. The live session runs baseline x86-64 packages and the
   `linux-cachyos` kernel built for x86-64, because virtual machines and
   older CPUs may lack AVX2. Optimized repos are enabled on the target only.
-- `airootfs` adds a `live` user with no password, SDDM autologin into
+- `airootfs` adds a `live` user with no password, greetd autologin into
   Hyprland, the chiroptera mirrorlist, and a desktop entry plus a top bar
   button that launch Calamares with `pkexec`.
 - Boot menus show the Chiroptera name and logo.
@@ -267,7 +252,7 @@ shellprocess (hwd), bootloader, umount, finished.
 Partition offers ext4 and btrfs, optional LUKS, systemd-boot on UEFI and GRUB
 on BIOS. The `packages` module removes live-only packages and installs the
 list generated at ISO build so target and image match. `services-systemd`
-enables sddm, NetworkManager, bluetooth. `shellprocess` runs
+enables greetd, NetworkManager, bluetooth. `shellprocess` runs
 `chiroptera-hwd apply` in the target chroot.
 
 ### 7.3 Hardware detection (chiroptera-hwd)
@@ -325,10 +310,11 @@ trust chain. Rollback is removing the repo entries and running
 
 ## 9. Error handling
 
-- Shell: a failing module logs and is skipped; the bar must still appear.
-  Missing secrets file disables the AI tab with a visible notice.
-- CLI: `dots apply` never overwrites a changed file without `--force` and
-  prints what it skipped.
+- Shell: a failing plugin is isolated in its own Luau VM and logged; the
+  bar must still appear. Missing secrets file disables the AI sidebar with a
+  visible notice.
+- Dots: `chiroptera-dots` never overwrites a changed file without `--force`
+  and prints what it skipped.
 - Packaging CI: any build or namcap failure fails the workflow and leaves the
   published repo untouched.
 - Calamares: hwd failure is logged and the install continues; a first-boot
@@ -340,8 +326,12 @@ trust chain. Rollback is removing the repo entries and running
 
 ## 10. Testing
 
-- Shell: CI loads `qs -c chiroptera` in a nested Hyprland or cage session
-  and fails on QML errors. Screenshots of bar and sidebars attached to runs.
+- Shell: CI builds with Meson and runs the upstream test suite (`meson
+  test`) after the rename; a nested Hyprland session starts `chiroptera` and
+  fails if the bar layer does not appear within five seconds. Screenshots of
+  bar and control center attached to runs.
+- AI sidebar plugin: `chiroptera plugins lint` passes; a fake HTTP endpoint
+  test checks streaming assembly of a reply.
 - Packages: namcap plus a clean-container install of chiroptera-meta with only
   official repos and the chiroptera repo enabled.
 - hwd: unit tests feed recorded `lscpu` and `lspci` output and assert the
@@ -350,7 +340,7 @@ trust chain. Rollback is removing the repo entries and running
 - Performance: a benchmark script in `scripts/` records boot time, kernel
   compile time, and a browser startup on the laptop before and after the
   CachyOS layer, so the gain is measured rather than assumed.
-- ISO nightly: build, boot in QEMU with OVMF, wait for SDDM, screenshot.
+- ISO nightly: build, boot in QEMU with OVMF, wait for the greeter, screenshot.
   Second job runs an unattended Calamares install to a disk image and boots
   the result to the login screen.
 - Manual: `docs/install-checklist.md` run on the author's laptop before every
@@ -358,17 +348,30 @@ trust chain. Rollback is removing the repo entries and running
 
 ## 11. Build order
 
-1. Copy the three source trees, set remotes, rename the CLI, get
-   `chiroptera shell -d` running on the author's laptop as a pure rename.
-2. Top bar, left bar disabled by default.
-3. Packaging, CI, pacman repo on GitHub Pages. Laptop switches from AUR
-   caelestia packages to the chiroptera repo.
-4. chiroptera-hwd with tests, including CPU level detection and the CachyOS
+1. Copy Noctalia with history into chiroptera-shell, apply the rename
+   transform with the plugin-API alias, pass the Meson test suite, run it on
+   the laptop as the session shell. Package it. Laptop switches from the
+   AUR noctalia-git package to chiroptera-shell.
+2. chiroptera-dots from the laptop config, with Chiroptera binds; the
+   `chiroptera-dots` apply script; the laptop runs from the repo.
+3. Theme, logo, and bar composition: the Chiroptera look.
+4. Packaging, CI, pacman repo on GitHub Pages.
+5. chiroptera-hwd with tests, including CPU level detection and the CachyOS
    repo, kernel, and settings switch. Applied on the laptop, benchmarked
    before and after.
-5. ISO with live desktop and Calamares, VM install end to end.
-6. Right sidebar, workspace overview, left AI sidebar, one release each.
-7. Upstream sync script and weekly routine.
+6. ISO with live desktop, greetd autologin, and Calamares; VM install end to
+   end.
+7. AI sidebar plugin.
+8. Upstream sync script and weekly routine; greeter rebrand.
 
-Steps 1 to 5 produce a bootable image that reinstalls the author's machine
+Steps 1 to 6 produce a bootable image that reinstalls the author's machine
 with Chiroptera Shell. Each step gets its own implementation plan.
+
+## 12. Superseded
+
+The first version of this spec chose caelestia-shell as the base. That work
+(a renamed caelestia copy, tagged v0.1.0, and a caelestia CLI rename) was
+dropped on 2026-09-09 after the Noctalia spike; the repositories are reused
+for the Noctalia-based trees. The plan
+`docs/superpowers/plans/2026-09-09-step1-chiroptera-source-trees.md` is kept
+as history and is not to be executed.
