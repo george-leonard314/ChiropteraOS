@@ -9,3 +9,6 @@ pkgs/*/src/
 pkgs/*/pkg/
 pkgs/*/*.pkg.tar.*
 pkgs/*/*.log
+
+# makepkg bare git-source clones (named after the source, one line per package)
+pkgs/chiroptera-shell/chiroptera-shell/
