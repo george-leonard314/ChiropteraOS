@@ -538,13 +538,26 @@ Expected: `check-dots: ok`.
 
 - [ ] **Step 1: Tag the dots repo and push**
 
+The remote still holds a superseded caelestia-based history from before the
+project moved to Noctalia; the user agreed to discard it, and deleting the repo
+needs a token scope they have not granted. Overwrite it, exactly as was done for
+`chiroptera-shell`.
+
 ```bash
 cd ~/git/chiroptera-dots
 git tag -a v0.1.0 -m "chiroptera-dots 0.1.0: first capture of the laptop configuration"
-git push -u origin main --tags && git describe --tags
+git ls-remote origin | head -3          # the stale history, recorded before it goes
+git push --force -u origin main
+git push origin --tags
+git describe --tags
+git ls-remote origin | head -3
+git status -sb | head -1
 ```
 
-Expected: `v0.1.0`.
+Expected: the first `ls-remote` shows commit `484526c` (the discarded caelestia
+import); the force push succeeds; the second shows the new head matching local
+`HEAD` plus `refs/tags/v0.1.0`; `git describe --tags` prints `v0.1.0`; and
+`git status -sb` shows `## main...origin/main` with no ahead count.
 
 - [ ] **Step 2: Write the dots PKGBUILD**
 
