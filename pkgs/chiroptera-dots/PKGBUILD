@@ -1,0 +1,39 @@
+# Maintainer: George (ChiropteraOS)
+
+pkgname=chiroptera-dots
+_srcname=chiroptera-dots
+pkgver=0.1.0
+_tag=v0.1.0
+pkgrel=1
+pkgdesc='ChiropteraOS dotfiles: Hyprland, Chiroptera Shell, fish, foot, fastfetch'
+arch=('any')
+url='https://github.com/george-leonard314/chiroptera-dots'
+license=('MIT')
+depends=('hyprland' 'chiroptera-shell' 'fish' 'foot' 'fastfetch' 'btop' 'starship')
+optdepends=('thunar: file manager used by the file-explorer keybind'
+            'obsidian: notes, bound to the obsidian special workspace'
+            'superproductivity: todo, bound to the todo special workspace')
+provides=('chiroptera-dots')
+# Override with a local clone for development builds, e.g. file:///home/g/git/chiroptera-dots
+_repo="${CHIROPTERA_DOTS_REPO:-$url.git}"
+source=("${_srcname}::git+${_repo}#tag=${_tag}")
+sha256sums=('SKIP')
+
+package() {
+  cd "${_srcname}"
+  # Pristine tree the installer copies from.
+  install -dm755 "$pkgdir/usr/share/chiroptera/dots"
+  cp -a config/. "$pkgdir/usr/share/chiroptera/dots/"
+  # New users get it through /etc/skel.
+  install -dm755 "$pkgdir/etc/skel/.config"
+  cp -a config/. "$pkgdir/etc/skel/.config/"
+  install -dm755 "$pkgdir/usr/share/chiroptera/branding"
+  install -m644 branding/*.svg "$pkgdir/usr/share/chiroptera/branding/"
+  install -Dm644 branding/wallpapers/chiroptera-default.png \
+    "$pkgdir/usr/share/backgrounds/chiroptera/chiroptera-default.png"
+  install -Dm755 bin/chiroptera-super-tap "$pkgdir/usr/bin/chiroptera-super-tap"
+  install -Dm755 bin/chiroptera-toggle    "$pkgdir/usr/bin/chiroptera-toggle"
+  install -Dm755 install.sh               "$pkgdir/usr/bin/chiroptera-dots"
+  install -Dm644 README.md  "$pkgdir/usr/share/doc/$pkgname/README.md"
+  install -Dm644 CREDITS.md "$pkgdir/usr/share/doc/$pkgname/CREDITS.md"
+}

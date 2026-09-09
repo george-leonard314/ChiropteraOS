@@ -1,0 +1,34 @@
+# Maintainer: George (ChiropteraOS)
+
+pkgname=chiroptera-meta
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Everything a ChiropteraOS desktop needs'
+arch=('any')
+url='https://github.com/george-leonard314/ChiropteraOS'
+license=('MIT')
+depends=(
+  # Shell and dotfiles
+  'chiroptera-shell' 'chiroptera-dots'
+  # Compositor and session
+  'hyprland' 'xdg-desktop-portal-hyprland' 'xdg-desktop-portal-gtk' 'uwsm'
+  # Terminal and shell tooling
+  'foot' 'fish' 'starship' 'eza' 'zoxide' 'fzf' 'jq' 'ripgrep' 'bat'
+  # System tools the config and keybinds use
+  'btop' 'fastfetch' 'wl-clipboard' 'cliphist' 'hyprpicker' 'grim' 'slurp'
+  'brightnessctl' 'ddcutil' 'trash-cli' 'inotify-tools' 'polkit-gnome' 'gnome-keyring'
+  # Audio, network, bluetooth
+  'pipewire' 'pipewire-pulse' 'pipewire-alsa' 'wireplumber' 'networkmanager' 'bluez' 'bluez-utils'
+  # Look and feel
+  'adw-gtk-theme' 'papirus-icon-theme' 'qt5ct-kde' 'qt6ct-kde'
+  'ttf-jetbrains-mono-nerd' 'noto-fonts' 'noto-fonts-cjk' 'noto-fonts-emoji'
+  'ttf-material-symbols-variable'
+  # Sound effects used by the fish error hook
+  'sound-theme-freedesktop' 'libpulse'
+)
+optdepends=('thunar: file manager'
+            'obsidian: notes'
+            'superproductivity: todo'
+            'noctalia-greeter: greetd login screen themed by the shell'
+            'nwg-displays: monitor layout editor')
+provides=('chiroptera-meta')
