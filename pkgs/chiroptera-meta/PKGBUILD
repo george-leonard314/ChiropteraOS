@@ -35,5 +35,4 @@ optdepends=('thunar: file manager'
             'superproductivity: todo'
             'noctalia-greeter: greetd login screen themed by the shell'
             'nwg-displays: monitor layout editor'
-            'gitkraken: git client, bound to Super+G')
 provides=('chiroptera-meta')
