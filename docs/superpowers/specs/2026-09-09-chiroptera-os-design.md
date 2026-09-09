@@ -175,6 +175,23 @@ chiroptera --daemon`, IPC binds (`chiroptera msg panel-toggle launcher`,
 and brightness), the Chiroptera layer rules for blur, and the settings-window
 float rule. User overrides stay in `hypr/hyprland/user.conf`, sourced last.
 
+Two caelestia behaviours the author keeps, both implemented in
+chiroptera-dots without shell support:
+
+- **Special-workspace toggles.** `scripts/chiroptera-toggle` (Python, stdlib
+  only, installed as `/usr/bin/chiroptera-toggle`) reproduces caelestia's
+  `toggle`: for a named special workspace, launch the app into it if absent,
+  move a running instance into it if configured, then
+  `togglespecialworkspace`. Config in `chiroptera/toggles.toml` with entries
+  for communication (Super+D), obsidian (Super+O), todo (Super+R), music
+  (Super+M), sysmon (Ctrl+Shift+Escape), and the plain `specialws`
+  (Super+S).
+- **Super tap opens the launcher.** Press of `Super_L` arms a flag file in
+  `$XDG_RUNTIME_DIR`, any other key or mouse button with Super held clears
+  it (Hyprland `catchall` non-consuming binds), release of `Super_L` fires
+  `chiroptera msg panel-toggle launcher` only if still armed. Implemented as
+  `scripts/chiroptera-super-tap` and seven bind lines.
+
 Personal files never enter any repo. Each repo has a `.gitignore` covering
 them and a pre-commit hook that rejects files matching a secret pattern list.
 
