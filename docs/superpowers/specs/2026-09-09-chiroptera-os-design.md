@@ -10,6 +10,10 @@ live Hyprland desktop running Chiroptera Shell, with a Calamares installer
 that produces a machine matching the author's current configuration. Installed
 machines pull shell and dotfile updates through a pacman repository.
 
+Performance targets CachyOS: the same kernel, the same optimized package
+repositories, and the same system tuning, consumed from their repos rather
+than rebuilt.
+
 Chiroptera Shell is a Quickshell desktop shell derived from caelestia-shell,
 with a top bar, two sidebars, and a workspace overview ported from end-4's
 illogical-impulse dotfiles.
@@ -30,6 +34,7 @@ public website, secure boot, non-x86_64 targets.
 | Hardware target | Generic with hardware detection. |
 | Repo layout | Three repos: chiroptera-shell, chiroptera-dots, ChiropteraOS. |
 | Upstream tracking | Optional. A sync script plus a weekly assisted review. Never automatic. |
+| Performance | Consume the CachyOS repositories: kernel, optimized v3/v4 packages, cachyos-settings, ananicy-cpp. Stock `linux` kept as fallback. |
 
 ## 3. Repositories
 
@@ -196,7 +201,7 @@ pre-commit hook that rejects files matching a secret pattern list.
 | chiroptera-shell | chiroptera-shell tag | Quickshell config under `/etc/xdg/quickshell/chiroptera` |
 | chiroptera-cli | chiroptera-dots tag | Python package and `chiroptera` executable |
 | chiroptera-dots | chiroptera-dots tag | `/usr/share/chiroptera/dots`, `/etc/skel` entries |
-| chiroptera-meta | none | depends on everything a desktop needs |
+| chiroptera-meta | none | depends on everything a desktop needs, including linux-cachyos, cachyos-settings, ananicy-cpp, scx-manager |
 | chiroptera-hwd | ChiropteraOS | hardware detection script and service |
 | chiroptera-calamares-config | ChiropteraOS | Calamares settings, modules, branding |
 | chiroptera-sddm-theme | ChiropteraOS | login screen theme |
@@ -215,7 +220,18 @@ Workflow `packages.yml` on push to main and on a schedule:
 4. `repo-add chiroptera.db.tar.gz` with signature.
 5. Publish the repo directory to GitHub Pages.
 
-### 6.3 Repo URL
+### 6.3 Repository order
+
+`pacman.conf` on installed systems, from top to bottom: `chiroptera`, the
+CachyOS optimized repo for the detected CPU level (`cachyos-v3` or
+`cachyos-v4` plus `cachyos-core-v3`/`cachyos-extra-v3` variants, or
+`cachyos-znver4`), `cachyos`, then `core`, `extra`, `multilib`, and any user
+repos such as `blackarch` last. The CachyOS signing key is installed by
+`chiroptera-meta` from the `cachyos-keyring` package. Because pacman picks
+by repo order, `chiroptera` packages always win, then CachyOS rebuilds,
+then Arch.
+
+### 6.4 Repo URL
 
 One file holds the mirror: `iso/airootfs/etc/pacman.d/chiroptera-mirrorlist`.
 The `chiroptera-meta` package installs the same file and the pacman.conf
@@ -232,7 +248,10 @@ Based on archiso `releng`. Changes:
   chiroptera-dots, chiroptera-cli, chiroptera-hwd, calamares,
   chiroptera-calamares-config, linux-firmware, and the NVIDIA and AMD driver
   packages so the live session works on both.
-- `pacman.conf` for the build includes the chiroptera repo.
+- `pacman.conf` for the build includes the chiroptera repo and the CachyOS
+  base repo only. The live session runs baseline x86-64 packages and the
+  `linux-cachyos` kernel built for x86-64, because virtual machines and
+  older CPUs may lack AVX2. Optimized repos are enabled on the target only.
 - `airootfs` adds a `live` user with no password, SDDM autologin into
   Hyprland, the chiroptera mirrorlist, and a desktop entry plus a top bar
   button that launch Calamares with `pkexec`.
@@ -257,6 +276,11 @@ Shell script with two commands: `detect` prints the package and service plan
 as JSON, `apply` installs it. Detection from `lscpu` and `lspci -nn`:
 
 - CPU vendor: `amd-ucode` or `intel-ucode`.
+- CPU feature level from `/lib/ld-linux-x86-64.so.2 --help` output:
+  x86-64-v4 with AVX-512 selects `cachyos-v4`, Zen 4 or newer selects
+  `cachyos-znver4`, v3 with AVX2 selects `cachyos-v3`, anything lower keeps
+  `cachyos` only. Writes the matching pacman.conf snippet and runs a full
+  upgrade so v3 rebuilds replace baseline packages.
 - NVIDIA GPU present: `nvidia-open`, `nvidia-utils`, `lib32-nvidia-utils`,
   and a Hyprland env snippet in `/etc/chiroptera/hypr-hwd.conf`. Hybrid with
   AMD or Intel adds the integrated driver and marks NVIDIA as secondary.
@@ -265,10 +289,41 @@ as JSON, `apply` installs it. Detection from `lscpu` and `lspci -nn`:
 - Virtual machine: `qemu-guest-agent` or `virtualbox-guest-utils`, no
   proprietary drivers.
 
-Runnable on an already installed machine. The author's laptop, AMD Renoir plus
-NVIDIA TU116 with nvidia-open, is the reference hybrid case.
+For NVIDIA the module package is the CachyOS prebuilt one for the selected
+kernel, `linux-cachyos-nvidia-open`, so no DKMS build runs during install.
+Stock `linux` and `nvidia-open` stay installed as a fallback boot entry.
 
-## 8. Error handling
+Runnable on an already installed machine. The author's laptop, AMD Renoir plus
+NVIDIA TU116 with nvidia-open, is the reference hybrid case and resolves to
+`cachyos-v3` since Zen 2 has AVX2 but not AVX-512.
+
+## 8. Performance layer
+
+ChiropteraOS does not build a kernel or rebuild packages. It consumes the
+CachyOS repositories, which are published for use on plain Arch.
+
+- Kernel: `linux-cachyos` (EEVDF, Clang ThinLTO, AutoFDO and Propeller,
+  1000 Hz, dynamic preemption, Cachy Sauce patches) as default boot entry.
+  `linux` from Arch stays installed as fallback. `scx-manager` is installed so
+  the user can switch to sched-ext schedulers such as scx_lavd at runtime.
+- Userland: the optimized repo matching the CPU level, chosen by
+  `chiroptera-hwd`. Packages there are built with LTO and, for core packages,
+  PGO and BOLT.
+- Tuning: `cachyos-settings` for sysctl, udev I/O schedulers, zram with zstd,
+  transparent hugepage policy, systemd timeouts, journal cap, NVIDIA power
+  management modprobe options, and audio realtime limits. `ananicy-cpp` with
+  `cachyos-ananicy-rules` for process priorities.
+- Local builds: `chiroptera-dots` ships an optional `makepkg.conf` with the
+  v3 flags so AUR builds match, applied by `chiroptera-hwd` when the level is
+  v3 or above.
+
+Accepted costs, recorded from the discussion: CachyOS rebuilds may lag Arch
+by up to a day for a given package, v3 and above binaries require AVX2 so a
+disk cannot move to an older CPU, and the CachyOS signing key joins the
+trust chain. Rollback is removing the repo entries and running
+`pacman -Syuu`.
+
+## 9. Error handling
 
 - Shell: a failing module logs and is skipped; the bar must still appear.
   Missing secrets file disables the AI tab with a visible notice.
@@ -279,9 +334,11 @@ NVIDIA TU116 with nvidia-open, is the reference hybrid case.
 - Calamares: hwd failure is logged and the install continues; a first-boot
   notification tells the user to run `chiroptera-hwd apply`.
 - hwd: unknown hardware installs only mesa and microcode, never guesses a
-  proprietary driver.
+  proprietary driver. Unknown CPU level keeps baseline repos only.
+- Kernel: if `linux-cachyos` fails to boot, the bootloader menu still offers
+  stock `linux`.
 
-## 9. Testing
+## 10. Testing
 
 - Shell: CI loads `qs -c chiroptera` in a nested Hyprland or cage session
   and fails on QML errors. Screenshots of bar and sidebars attached to runs.
@@ -289,21 +346,26 @@ NVIDIA TU116 with nvidia-open, is the reference hybrid case.
   official repos and the chiroptera repo enabled.
 - hwd: unit tests feed recorded `lscpu` and `lspci` output and assert the
   JSON plan. Fixtures: AMD-only, Intel-only, NVIDIA-only, AMD plus NVIDIA
-  hybrid, QEMU, VirtualBox.
+  hybrid, QEMU, VirtualBox, and CPU levels v2, v3, v4, znver4.
+- Performance: a benchmark script in `scripts/` records boot time, kernel
+  compile time, and a browser startup on the laptop before and after the
+  CachyOS layer, so the gain is measured rather than assumed.
 - ISO nightly: build, boot in QEMU with OVMF, wait for SDDM, screenshot.
   Second job runs an unattended Calamares install to a disk image and boots
   the result to the login screen.
 - Manual: `docs/install-checklist.md` run on the author's laptop before every
   release tag.
 
-## 10. Build order
+## 11. Build order
 
 1. Copy the three source trees, set remotes, rename the CLI, get
    `chiroptera shell -d` running on the author's laptop as a pure rename.
 2. Top bar, left bar disabled by default.
 3. Packaging, CI, pacman repo on GitHub Pages. Laptop switches from AUR
    caelestia packages to the chiroptera repo.
-4. chiroptera-hwd with tests, applied on the laptop.
+4. chiroptera-hwd with tests, including CPU level detection and the CachyOS
+   repo, kernel, and settings switch. Applied on the laptop, benchmarked
+   before and after.
 5. ISO with live desktop and Calamares, VM install end to end.
 6. Right sidebar, workspace overview, left AI sidebar, one release each.
 7. Upstream sync script and weekly routine.
