@@ -13,3 +13,7 @@ pkgs/*/*.log
 # makepkg bare git-source clones (named after the source, one line per package)
 pkgs/chiroptera-shell/chiroptera-shell/
 pkgs/chiroptera-dots/chiroptera-dots/
+
+# Built repository (CI output; also written by ci/run-in-container.sh)
+/repo/
+pkgs/app2unit/app2unit-*.tgz

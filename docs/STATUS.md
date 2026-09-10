@@ -1,6 +1,6 @@
 # Where the build stands
 
-Updated 2026-09-09.
+Updated 2026-09-10.
 
 ## Done
 
@@ -22,27 +22,42 @@ removed afterwards with nothing left depending on them.
 | Step | Work |
 |---|---|
 | 3 | Theme, logo and bar composition — largely done during step 2 |
-| 4 | Build CI and the pacman repository on GitHub Pages |
+| 4 | Publishing: choose a host and wire up the `publish` job (build CI is done) |
 | 5 | `chiroptera-hwd` hardware detection, plus the CachyOS kernel and repos |
 | 6 | The ISO: archiso profile, live desktop, Calamares |
 | 7 | The AI sidebar plugin |
 | 8 | Upstream sync tooling and the greeter rebrand |
 
-Step 4 comes next: the installer needs somewhere to pull packages from.
+Step 4's build half is done: `.github/workflows/packages.yml` builds all four
+packages in an Arch container, proves the result installable, and uploads a
+ready-to-serve repository. What remains of it is choosing where to publish —
+see `docs/repository.md`. Step 5 can proceed in parallel.
 
 ## Known blockers
 
-- **Private repositories cannot be cloned by `makepkg`.** Git inside `makepkg`
-  does not use the `gh` credential helper, so local builds pass
-  `CHIROPTERA_DOTS_REPO=file:///home/g/git/chiroptera-dots` and the shell
-  equivalent. Step 4 must resolve this with a deploy token or by making the
-  source repositories public.
-- **Undeclared dependencies** in `chiroptera-meta`: `firefox` and `code` are
-  bound to keys through `app2unit`; `libnotify` backs a test keybind.
-- **`app2unit` is AUR-only** until the ChiropteraOS repository carries it.
 - **Moving a git tag does not invalidate `makepkg`'s cached checkout.** After any
   tag move, clear the package directory's cache or the rebuild ships stale
-  content.
+  content. CI clones fresh each run and so cannot hit this, but its skip logic
+  keys on `pkgver-pkgrel`: after moving a tag, bump `pkgrel` or dispatch the
+  workflow with `force_rebuild`.
+- **Where to publish the repository is undecided.** GitHub Pages publishes from
+  a private repository only on a paid plan, and all three repositories are
+  private. See `docs/repository.md`.
+
+### Resolved in step 4
+
+- ~~Private repositories cannot be cloned by `makepkg`.~~ CI rewrites the clone
+  URL for the build user with a fine-grained deploy token, so `makepkg`'s plain
+  `git clone` authenticates. Local builds still use the `file://` overrides.
+  The token expires within a year and must be rotated.
+- ~~Undeclared dependencies in `chiroptera-meta`.~~ `libnotify` is declared.
+  `firefox` and `code` were deliberately dropped rather than declared: there is
+  no profile or configuration invested in either. The keybinds referencing them
+  in `chiroptera-dots` still point at applications the meta package no longer
+  pulls in.
+- ~~`app2unit` is AUR-only.~~ Vendored into `pkgs/app2unit`.
+- ~~`chiroptera-meta` did not parse.~~ Commit `9e12a3b` had left the
+  `optdepends` array unterminated. Lint now catches this class of error.
 
 ## Decisions still owed by the author
 

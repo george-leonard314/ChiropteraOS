@@ -1,0 +1,124 @@
+name: packages
+
+on:
+  push:
+    branches: [main]
+    paths: ['pkgs/**', 'ci/**', '.github/workflows/packages.yml']
+  pull_request:
+    paths: ['pkgs/**', 'ci/**', '.github/workflows/packages.yml']
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: Rebuild every package even if its version is already built
+        type: boolean
+        default: false
+
+concurrency:
+  group: packages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint PKGBUILDs
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    steps:
+      - name: Install git
+        run: pacman -Sy --needed --noconfirm git
+
+      - uses: actions/checkout@v4
+
+      - name: Create the build user
+        run: |
+          useradd -m builder
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Check every PKGBUILD parses
+        # makepkg refuses to run as root, even for --printsrcinfo.
+        run: sudo -u builder ./ci/lint-pkgbuilds.sh
+
+  build:
+    name: Build repository
+    needs: lint
+    # Pull requests get the lint gate only; building needs the deploy token,
+    # which is not exposed to pull requests from forks.
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    steps:
+      - name: Install git
+        run: pacman -Sy --needed --noconfirm git
+
+      - uses: actions/checkout@v4
+
+      - name: Restore previously built packages
+        # Rolling cache: the run-id key never hits, so every run saves a fresh
+        # entry, and restore-keys pulls the most recent one. Losing the cache
+        # costs a full rebuild, never correctness.
+        uses: actions/cache@v4
+        with:
+          path: repo
+          key: chiroptera-repo-${{ github.run_id }}
+          restore-keys: chiroptera-repo-
+
+      - name: Create the build user
+        run: |
+          useradd -m builder
+          echo 'builder ALL=(ALL) NOPASSWD: /usr/bin/pacman' > /etc/sudoers.d/builder
+          mkdir -p repo
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Authenticate makepkg against the private source repositories
+        # makepkg strips the git+ prefix and runs a plain `git clone https://…`,
+        # which ignores gh's credential helper. Rewriting the URL for the build
+        # user is what makes that clone authenticate.
+        env:
+          SOURCE_REPO_TOKEN: ${{ secrets.SOURCE_REPO_TOKEN }}
+        run: |
+          if [ -z "$SOURCE_REPO_TOKEN" ]; then
+            echo "SOURCE_REPO_TOKEN is not set; the private sources cannot be cloned" >&2
+            exit 1
+          fi
+          sudo -u builder git config --global \
+            url."https://x-access-token:${SOURCE_REPO_TOKEN}@github.com/".insteadOf \
+            "https://github.com/"
+
+      - name: Build the repository
+        env:
+          FORCE_REBUILD: ${{ inputs.force_rebuild && '1' || '0' }}
+          PACKAGE_SIGNING_KEY: ${{ secrets.PACKAGE_SIGNING_KEY }}
+        run: |
+          sudo -u builder --preserve-env=FORCE_REBUILD,PACKAGE_SIGNING_KEY \
+            ./ci/build-repo.sh
+
+      - name: Prove the repository is installable
+        # Runs as root: pacman -Sy requires it.
+        run: ./ci/smoke-test.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chiroptera-repo
+          path: repo/
+          retention-days: 30
+
+  publish:
+    name: Publish
+    needs: build
+    # Inert until a host is chosen. Setting the PUBLISH_TARGET repository
+    # variable turns this on; see docs/repository.md for what has to be
+    # decided first.
+    if: vars.PUBLISH_TARGET != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: chiroptera-repo
+          path: repo
+
+      - name: Not yet wired up
+        run: |
+          echo "PUBLISH_TARGET is set to '${{ vars.PUBLISH_TARGET }}' but no" >&2
+          echo "publishing step has been implemented yet. See docs/repository.md." >&2
+          exit 1
