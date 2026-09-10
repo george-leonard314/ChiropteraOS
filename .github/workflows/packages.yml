@@ -26,7 +26,7 @@ jobs:
       - name: Install git
         run: pacman -Sy --needed --noconfirm git
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Create the build user
         run: |
@@ -50,13 +50,13 @@ jobs:
       - name: Install git
         run: pacman -Sy --needed --noconfirm git
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Restore previously built packages
         # Rolling cache: the run-id key never hits, so every run saves a fresh
         # entry, and restore-keys pulls the most recent one. Losing the cache
         # costs a full rebuild, never correctness.
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: repo
           key: chiroptera-repo-${{ github.run_id }}
@@ -97,7 +97,7 @@ jobs:
         # Runs as root: pacman -Sy requires it.
         run: ./ci/smoke-test.sh
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: chiroptera-repo
           path: repo/
@@ -112,7 +112,7 @@ jobs:
     if: vars.PUBLISH_TARGET != ''
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: chiroptera-repo
           path: repo
