@@ -52,6 +52,11 @@ expect_edit() {  # input level expected
     [ "$status" -eq 3 ]
 }
 
+@test "a file with [core] but no [options] section is refused" {
+    run edit_pacman_conf v3 < "$CONF/no-options.conf"
+    [ "$status" -eq 4 ]
+}
+
 @test "repo_block v4 names every section with its mirrorlist" {
     run repo_block v4
     [ "$output" = "[cachyos-v4]

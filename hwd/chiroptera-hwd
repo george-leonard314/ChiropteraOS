@@ -153,24 +153,28 @@ repo_block() {  # level
 }
 
 # Print pacman.conf with the level's sections inserted directly above [core]
-# and Architecture set to auto (added if missing), which the CachyOS pacman
-# needs to accept its x86_64_v3/v4 packages. A [cachyos] section already
-# present means a CachyOS setup exists: the sections are then left exactly as
-# they are, which is what makes a second run a no-op. Exits 3 when there is
-# no [core] to anchor on.
+# and Architecture set to auto (added directly after [options] when missing),
+# which the CachyOS pacman needs to accept its x86_64_v3/v4 packages. A
+# [cachyos] section already present means a CachyOS setup exists: the
+# sections are then left exactly as they are, which is what makes a second
+# run a no-op. Exits 3 when there is no [core] to anchor on. Exits 4 when
+# there is no [options] section to anchor an inserted Architecture line on
+# and no existing Architecture line to convert -- guessing where to put one
+# would risk splitting an unrelated section.
 edit_pacman_conf() {  # level < pacman.conf
     HWD_BLOCK=$(repo_block "$1") awk '
         /^Architecture[[:space:]]*=/ { $0 = "Architecture = auto"; saw_arch = 1 }
         $0 == "[cachyos]" { present = 1 }
         {
             if (/^\[options\]/) {
+                options_present = 1
                 options_line = n + 1
             }
             lines[++n] = $0
         }
         END {
             for (i = 1; i <= n; i++) {
-                if (i == options_line + 1 && !saw_arch && lines[i] !~ /^Architecture/) {
+                if (options_present && i == options_line + 1 && !saw_arch && lines[i] !~ /^Architecture/) {
                     print "Architecture = auto"
                 }
                 if (!present && !done && lines[i] == "[core]") {
@@ -181,6 +185,7 @@ edit_pacman_conf() {  # level < pacman.conf
                 print lines[i]
             }
             if (!present && !done) exit 3
+            if (!options_present && !saw_arch) exit 4
         }'
 }
 
@@ -283,7 +288,10 @@ step() {
 
 # Put NEWFILE's content in TARGET, keeping a timestamped backup of what was
 # there. Identical content is left alone, so re-runs create no backups. A dry
-# run shows the change as a diff instead.
+# run shows the change as a diff instead. The write itself is atomic: the new
+# content lands at TARGET.hwd-new first, with TARGET's mode and owner copied
+# onto it, then a rename puts it in place -- a reader of TARGET never sees a
+# partial write.
 replace_file() {  # target newfile
     local old=$1
     if [[ ! -e $1 ]]; then old=/dev/null; fi
@@ -293,7 +301,12 @@ replace_file() {  # target newfile
     fi
     if cmp -s "$old" "$2"; then return 0; fi
     if [[ -e $1 ]]; then cp -a "$1" "$1.hwd-$STAMP"; fi
-    cat "$2" > "$1"
+    cat "$2" > "$1.hwd-new"
+    if [[ -e $1 ]]; then
+        chmod --reference="$1" "$1.hwd-new"
+        chown --reference="$1" "$1.hwd-new"
+    fi
+    mv -f "$1.hwd-new" "$1"
 }
 
 step_repositories() {  # level
@@ -324,14 +337,25 @@ EOF
     pac --config "$boot" -Sy --needed cachyos-keyring "${mirrorlists[@]}"
 
     local new=$TMPD/pacman.conf
-    edit_pacman_conf "$1" < "$conf" > "$new" || die "no [core] section in $conf"
+    local ec=0
+    edit_pacman_conf "$1" < "$conf" > "$new" || ec=$?
+    case $ec in
+        0) ;;
+        3) die "no [core] section in $conf" ;;
+        4) die "no [options] section in $conf" ;;
+        *) die "could not edit $conf" ;;
+    esac
     replace_file "$conf" "$new"
 }
 
 step_graphics() {
     # For review only: the table chwd prints is for people, not parsing.
-    if (( DRY_RUN )) && command -v chwd >/dev/null; then
-        chwd --list || true
+    if (( DRY_RUN )); then
+        if command -v chwd >/dev/null; then
+            chwd --list || true
+        else
+            printf "chwd is not installed yet: it picks the graphics profile at step 4 and installs it without prompting. Run 'chwd --list' after step 3 to preview it.\n"
+        fi
     fi
     runcmd chwd -a
 }
@@ -396,7 +420,10 @@ cmd_apply() {
     # Arch's pacman rejects x86_64_v3/v4 packages, so it cannot perform the
     # upgrade itself. The fork's own package is plain x86_64 and installs fine.
     step "2/5: CachyOS pacman, then the upgrade"
-    pac -Sy --needed cachyos/pacman
+    # -Syy forces a fresh sync of every database: the bootstrap step already
+    # fetched cachyos.db from mirror.cachyos.org, and -Sy alone would trust
+    # that copy instead of replacing it with what the real mirrorlist serves.
+    pac -Syy --needed cachyos/pacman
     pac -Syu
 
     step "3/5: kernel and CachyOS packages"
@@ -411,7 +438,11 @@ cmd_apply() {
     step_boot "$bootloader"
 
     CURRENT_STEP=
-    printf '\nchiroptera-hwd: done. Reboot into linux-cachyos; stock linux remains in the boot menu.\n'
+    if (( DRY_RUN )); then
+        printf '\nchiroptera-hwd: dry run complete; nothing was changed.\n'
+    else
+        printf '\nchiroptera-hwd: done. Reboot into linux-cachyos; stock linux stays installed as the fallback (on GRUB it is under "Advanced options").\n'
+    fi
 }
 
 # ---- entry point -------------------------------------------------------------

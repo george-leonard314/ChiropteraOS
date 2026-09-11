@@ -16,10 +16,13 @@ teardown() {
     source "$HWD"
     DRY_RUN=0 STAMP=20260911-120000
     printf 'old\n' > "$WORK/f"
+    chmod 600 "$WORK/f"
     printf 'new\n' > "$WORK/new"
     replace_file "$WORK/f" "$WORK/new"
     [ "$(cat "$WORK/f")" = new ]
     [ "$(cat "$WORK/f.hwd-20260911-120000")" = old ]
+    [ "$(stat -c %a "$WORK/f")" = 600 ]
+    [ ! -e "$WORK/f.hwd-new" ]
 
     STAMP=20260911-130000
     replace_file "$WORK/f" "$WORK/new"
@@ -64,11 +67,14 @@ line_of() {  # fixed-string -> first line number in $output
     grep -qF 'cachyos-keyring cachyos-v3-mirrorlist cachyos-mirrorlist' <<<"$output"
     grep -qx '+\[cachyos-v3\]' <<<"$output"
     grep -qx '+GRUB_TOP_LEVEL="/boot/vmlinuz-linux-cachyos"' <<<"$output"
+    grep -qF 'chwd is not installed yet' <<<"$output"
+    grep -qF 'dry run complete; nothing was changed' <<<"$output"
+    [ "$(grep -c 'done. Reboot' <<<"$output")" -eq 0 ]
 
     init=$(line_of '+ pacman-key --init')
     keys=$(line_of '+ pacman-key --recv-keys')
     conf=$(line_of '+[cachyos-v3]')
-    fork=$(line_of '+ pacman -Sy --needed cachyos/pacman')
+    fork=$(line_of '+ pacman -Syy --needed cachyos/pacman')
     upgrade=$(line_of '+ pacman -Syu')
     pkgs=$(line_of '+ pacman -S --needed linux-cachyos linux-cachyos-headers amd-ucode')
     chwd=$(line_of '+ chwd -a')
