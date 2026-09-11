@@ -128,8 +128,9 @@ Output for the author's laptop:
 }
 ```
 
-`gpu` is always `chwd`: the profile is chwd's decision, and `apply --dry-run`
-shows it.
+`gpu` is always `chwd`: the profile is chwd's decision. `apply --dry-run`
+shows it only once chwd is installed, which does not happen until step 3;
+before that the dry run says so instead of guessing.
 
 ## `apply`
 
@@ -148,16 +149,24 @@ rather than rolled back.
      `[blackarch]` and any other section stays where it is.
    - Set `Architecture = auto`.
    - A section already present is not added again.
+   - A `pacman.conf` with no `[options]` section, and no existing
+     Architecture line to convert, is refused rather than guessed at: there
+     is no reliable place to anchor an inserted `Architecture = auto` line.
 2. **Upgrade, in two transactions.**
-   - `pacman -Sy --needed cachyos/pacman` first. Arch's pacman rejects
-     packages whose architecture is `x86_64_v3` or `x86_64_v4` under
-     `Architecture = auto`, so it cannot perform the upgrade itself; the
-     fork's own package is plain `x86_64` and installs fine. CachyOS's
-     `cachyos-repo.sh` orders it the same way for the same reason.
+   - `pacman -Syy --needed cachyos/pacman` first. The `-Syy` forces a fresh
+     sync of every database, refreshing the `cachyos.db` the bootstrap step
+     fetched from `mirror.cachyos.org` with what the level's mirrorlist
+     actually serves. Arch's pacman rejects packages whose architecture is
+     `x86_64_v3` or `x86_64_v4` under `Architecture = auto`, so it cannot
+     perform the upgrade itself; the fork's own package is plain `x86_64`
+     and installs fine. CachyOS's `cachyos-repo.sh` orders it the same way
+     for the same reason.
    - `pacman -Syu` with the fork. The level's rebuilds replace Arch's packages.
 3. **Packages.** `pacman -S --needed` the `packages` list from `detect`, plus
    guest tools on a VM.
-4. **Graphics.** `chwd -a`, now that `linux-cachyos` is installed.
+4. **Graphics.** `chwd -a`, now that `linux-cachyos` is installed. `chwd`
+   chooses the profile and installs it itself, without prompting; it is the
+   one step in apply that pacman does not ask about.
 5. **Boot.**
    - GRUB: set `GRUB_TOP_LEVEL="/boot/vmlinuz-linux-cachyos"` in
      `/etc/default/grub`, then `grub-mkconfig -o /boot/grub/grub.cfg`.
@@ -171,6 +180,12 @@ Invariants:
 
 - **Never removes stock `linux` or `nvidia-open`.** They remain installed and
   bootable as the fallback entry.
+- **The fallback's NVIDIA module can still lag.** After the upgrade,
+  packages such as `nvidia-open` come from CachyOS's rebuilds, because the
+  CachyOS sections sit above `[core]` and `[extra]`, while stock `linux`
+  still comes from Arch. When CachyOS's `nvidia-open` lags an Arch kernel
+  update, the fallback kernel can be without the NVIDIA module until
+  CachyOS catches up; it still boots on the integrated GPU.
 - **Never edits or deletes a file it did not write,** apart from the
   `pacman.conf` and `/etc/default/grub` changes above, both of which it backs
   up. On the laptop that leaves `/etc/modprobe.d/nvidia.conf`, the `MODULES`
@@ -197,13 +212,25 @@ Invariants:
 
 Documented in `docs/hwd.md`, not shipped as a command:
 
-1. Boot the stock `linux` entry.
-2. Restore the oldest `/etc/pacman.conf.hwd-*` backup.
-3. `pacman -Suuy`, then `pacman -S core/pacman`, then `pacman -Qqn | pacman -S -`
+1. Boot the stock `linux` entry (on GRUB it is under "Advanced options for
+   Arch Linux").
+2. `chwd --list-installed`, then `chwd -r <profile>` for each installed
+   profile (on the author's laptop, `nvidia-open-dkms.prime`). Do this
+   first, while chwd is still installed: it removes
+   `linux-cachyos-nvidia-open` and the files chwd's hooks wrote
+   (`/etc/mkinitcpio.conf.d/10-chwd.conf`,
+   `/etc/profile.d/nvidia-rtd3-workaround.sh`,
+   `/usr/lib/systemd/user-environment-generators/20-nvidia-rtd3-workaround`),
+   which no package owns.
+3. Restore the oldest `/etc/pacman.conf.hwd-*` backup over
+   `/etc/pacman.conf`.
+4. `pacman -Suuy`, then `pacman -S core/pacman`, then `pacman -Qqn | pacman -S -`
    to reinstall every native package from Arch's repositories.
-4. Remove `linux-cachyos*`, `chwd`, `cachyos-*` and the CachyOS keyring, and
-   `pacman-key --delete F3B607488DB35A47`.
-5. Remove `GRUB_TOP_LEVEL` and regenerate `grub.cfg`.
+5. Remove `linux-cachyos-nvidia-open`, `linux-cachyos*`, `chwd`, `cachyos-*`
+   and the CachyOS keyring, and `pacman-key --delete F3B607488DB35A47`.
+6. Boot entry. GRUB: remove `GRUB_TOP_LEVEL` and regenerate `grub.cfg`.
+   systemd-boot: delete `loader/entries/linux-cachyos.conf` and restore
+   `loader/loader.conf` from its `.hwd-*` backup.
 
 A `revert` command would be a second system to test for a path that should
 not be needed. If it is ever needed twice, it becomes a command.
@@ -240,6 +267,15 @@ Three layers, cheapest first:
    `nvidia-smi` sees the TU116; the stock `linux` entry still boots.
 5. After-benchmarks, recorded in `docs/STATUS.md`.
 
+## Notes for step 6
+
+- Run hwd after Calamares' bootloader module, not before: otherwise
+  `/boot/grub/grub.cfg` does not exist yet and the bootloader is detected as
+  `unknown`.
+- After hwd, run `gpgconf --homedir /etc/pacman.d/gnupg --kill all` in the
+  chroot. `pacman-key` leaves `gpg-agent` and `dirmngr` running there, and
+  the target cannot be unmounted while they are.
+
 ## Out of scope
 
 The ISO and Calamares (step 6), beyond making `apply` runnable in a chroot.
@@ -254,7 +290,9 @@ Settled from `chwd`'s source and CachyOS's `cachyos-repo.sh`; the plan is
 
 1. `detect` reports `"gpu": "chwd"` rather than a profile name: `chwd --list`
    prints a table for people, not an interface. `apply --dry-run` prints it
-   verbatim. The `HWD_CHWD_PROFILE` override is dropped.
+   verbatim once chwd is installed, and otherwise says plainly that chwd
+   will pick the profile unprompted at step 4. The `HWD_CHWD_PROFILE`
+   override is dropped.
 2. The keyring and mirrorlists are installed through a throwaway pacman config
    pointing `[cachyos]` at `https://mirror.cachyos.org/repo/$arch/$repo`,
    instead of version-pinned package URLs, which go stale. It still precedes
