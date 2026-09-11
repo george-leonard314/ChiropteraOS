@@ -42,4 +42,20 @@ installed=$(pacman -Q pacman | cut -d' ' -f2)
 synced=$(pacman -Si cachyos/pacman | awk -F': *' '/^Version/ { print $2 }')
 [[ $installed == "$synced" ]] || fail "pacman is $installed, not cachyos/pacman $synced"
 
-echo "ok: $level CachyOS system with linux-cachyos and the CachyOS pacman"
+# A second apply must be a no-op: every step is meant to be idempotent, and
+# this is the cheapest place that can prove pacman.conf specifically settles
+# rather than growing a new backup or a new edit each time.
+shopt -s nullglob
+before_backup_files=(/etc/pacman.conf.hwd-*)
+before_sum=$(sha256sum /etc/pacman.conf)
+before_backups=${#before_backup_files[@]}
+
+HWD_BOOTLOADER=unknown "$hwd" apply --yes
+
+after_backup_files=(/etc/pacman.conf.hwd-*)
+after_sum=$(sha256sum /etc/pacman.conf)
+after_backups=${#after_backup_files[@]}
+[[ $before_sum == "$after_sum" ]] || fail "a second apply changed /etc/pacman.conf"
+[[ $before_backups == "$after_backups" ]] || fail "a second apply left a new pacman.conf backup"
+
+echo "ok: $level CachyOS system with linux-cachyos and the CachyOS pacman; a second apply changed nothing"
