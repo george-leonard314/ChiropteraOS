@@ -141,6 +141,40 @@ packages_for() {  # microcode virt
     printf '%s\n' "${pkgs[@]}"
 }
 
+# ---- pacman.conf -------------------------------------------------------------
+
+repo_block() {  # level
+    local repo first=1
+    for repo in $(repos_for "$1"); do
+        if (( ! first )); then echo; fi
+        first=0
+        printf '[%s]\nInclude = /etc/pacman.d/%s\n' "$repo" "$(mirrorlist_for_repo "$repo")"
+    done
+}
+
+# Print pacman.conf with the level's sections inserted directly above [core]
+# and Architecture set to auto, which the CachyOS pacman needs to accept its
+# x86_64_v3/v4 packages. A [cachyos] section already present means a CachyOS
+# setup exists: the sections are then left exactly as they are, which is what
+# makes a second run a no-op. Exits 3 when there is no [core] to anchor on.
+edit_pacman_conf() {  # level < pacman.conf
+    HWD_BLOCK=$(repo_block "$1") awk '
+        /^Architecture[[:space:]]*=/ { $0 = "Architecture = auto" }
+        $0 == "[cachyos]" { present = 1 }
+        { lines[++n] = $0 }
+        END {
+            for (i = 1; i <= n; i++) {
+                if (!present && !done && lines[i] == "[core]") {
+                    print ENVIRON["HWD_BLOCK"]
+                    print ""
+                    done = 1
+                }
+                print lines[i]
+            }
+            if (!present && !done) exit 3
+        }'
+}
+
 json_array() {  # words...
     local out='' word
     for word in "$@"; do

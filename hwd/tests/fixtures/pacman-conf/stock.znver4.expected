@@ -1,0 +1,30 @@
+[options]
+HoldPkg     = pacman glibc
+Architecture = auto
+CheckSpace
+SigLevel    = Required DatabaseOptional
+LocalFileSigLevel = Optional
+
+#[core-testing]
+#Include = /etc/pacman.d/mirrorlist
+
+[cachyos-znver4]
+Include = /etc/pacman.d/cachyos-v4-mirrorlist
+
+[cachyos-core-znver4]
+Include = /etc/pacman.d/cachyos-v4-mirrorlist
+
+[cachyos-extra-znver4]
+Include = /etc/pacman.d/cachyos-v4-mirrorlist
+
+[cachyos]
+Include = /etc/pacman.d/cachyos-mirrorlist
+
+[core]
+Include = /etc/pacman.d/mirrorlist
+
+[extra]
+Include = /etc/pacman.d/mirrorlist
+
+#[multilib]
+#Include = /etc/pacman.d/mirrorlist

@@ -1,0 +1,21 @@
+[options]
+HoldPkg     = pacman glibc
+Architecture = auto
+CheckSpace
+SigLevel    = Required DatabaseOptional
+LocalFileSigLevel = Optional
+
+#[core-testing]
+#Include = /etc/pacman.d/mirrorlist
+
+[cachyos]
+Include = /etc/pacman.d/cachyos-mirrorlist
+
+[core]
+Include = /etc/pacman.d/mirrorlist
+
+[extra]
+Include = /etc/pacman.d/mirrorlist
+
+#[multilib]
+#Include = /etc/pacman.d/mirrorlist
