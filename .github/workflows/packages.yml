@@ -106,16 +106,18 @@ jobs:
           chown -R builder:builder "$GITHUB_WORKSPACE"
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-      - name: Authenticate makepkg against the private source repositories
-        # makepkg strips the git+ prefix and runs a plain `git clone https://…`,
-        # which ignores gh's credential helper. Rewriting the URL for the build
-        # user is what makes that clone authenticate.
+      - name: Authenticate makepkg, if the sources are private
+        # The source repositories are public, so makepkg clones them anonymously
+        # and no token is needed. The secret stays supported for a private
+        # source: makepkg strips the git+ prefix and runs a plain
+        # `git clone https://…`, which ignores gh's credential helper, so the
+        # URL is rewritten for the build user instead.
         env:
           SOURCE_REPO_TOKEN: ${{ secrets.SOURCE_REPO_TOKEN }}
         run: |
           if [ -z "$SOURCE_REPO_TOKEN" ]; then
-            echo "SOURCE_REPO_TOKEN is not set; the private sources cannot be cloned" >&2
-            exit 1
+            echo "SOURCE_REPO_TOKEN is not set; cloning the public sources anonymously"
+            exit 0
           fi
           sudo -u builder git config --global \
             url."https://x-access-token:${SOURCE_REPO_TOKEN}@github.com/".insteadOf \

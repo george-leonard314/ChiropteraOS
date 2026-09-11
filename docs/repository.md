@@ -71,8 +71,9 @@ in a throwaway Arch container exactly as CI does:
 SOURCES=$HOME/git ./ci/run-in-container.sh
 ```
 
-`SOURCES` points at a directory holding local clones of the private source
-repositories, which are then cloned over `file://` — no deploy token needed.
+`SOURCES` points at a directory holding local clones of the source
+repositories, which are then cloned over `file://`, so unpushed work can be
+built.
 Output lands in `./repo`. `PACKAGES` limits which packages are built, so a
 change to the meta package can be checked without recompiling the shell:
 
@@ -80,13 +81,16 @@ change to the meta package can be checked without recompiling the shell:
 PACKAGES="app2unit chiroptera-meta" SOURCES=$HOME/git ./ci/run-in-container.sh
 ```
 
-## The deploy token
+## The deploy token (optional)
 
-`chiroptera-shell` and `chiroptera-dots` are private. Git inside `makepkg` does
-not use `gh`'s credential helper, so an unauthenticated clone fails with
-`could not read Username for 'https://github.com'`.
+`chiroptera-shell` and `chiroptera-dots` are public (since 2026-09-11), so
+`makepkg` clones them anonymously and CI needs no token. The build's
+authentication step says so and moves on when `SOURCE_REPO_TOKEN` is unset.
 
-CI resolves this by rewriting the clone URL for the build user:
+The token path stays for a private source. Git inside `makepkg` does not use
+`gh`'s credential helper, so an unauthenticated clone of a private repository
+fails with `could not read Username for 'https://github.com'`. When the secret
+exists, CI rewrites the clone URL for the build user:
 
 ```sh
 git config --global \
@@ -96,12 +100,11 @@ git config --global \
 `makepkg` strips the `git+` prefix and runs a plain `git clone https://…`, so
 the rewrite applies and the clone authenticates.
 
-**Creating or rotating it.** The token is a fine-grained personal access token
-with *Contents: Read* on `chiroptera-shell` and `chiroptera-dots` only, stored
-as the repository secret `SOURCE_REPO_TOKEN`. Fine-grained tokens expire after
-at most a year, so this is a recurring chore: when the build starts failing on
-`could not read Username`, the token has expired. Issue a new one with the same
-two-repository scope and replace the secret.
+**If a source goes private again.** Create a fine-grained personal access token
+with *Contents: Read* on the private repositories only, and store it as the
+repository secret `SOURCE_REPO_TOKEN`. Fine-grained tokens expire after at most
+a year: when the build starts failing on `could not read Username`, the token
+has expired and needs replacing.
 
 ## Gotchas worth knowing
 
@@ -126,13 +129,11 @@ everything, every run.
 
 ## Still owed
 
-**Publishing.** Where the repository is served is undecided. The constraint
-forcing the question: GitHub Pages publishes from a private repository only on
-a paid plan, and `ChiropteraOS`, `chiroptera-shell` and `chiroptera-dots` are
-all private. The candidates are a dedicated public repository served by Pages,
-GitHub Releases on such a repository, or making `ChiropteraOS` public. Note
-that whichever is chosen, the built packages are world-downloadable — clients
-have to fetch them anonymously — even though the source history stays private.
+**Publishing.** Where the repository is served is still the author's choice,
+but the constraint that blocked it is gone: `ChiropteraOS` is public (since
+2026-09-11), so GitHub Pages can serve the built repository from it for free.
+GitHub Releases on the same repository is the alternative. Either way the
+packages are world-downloadable, since clients fetch them anonymously.
 
 The `publish` job is gated on a `PUBLISH_TARGET` repository variable and fails
 loudly if enabled before it is implemented. Wiring it up is one job, not a
