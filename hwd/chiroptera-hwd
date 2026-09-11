@@ -1,0 +1,187 @@
+#!/usr/bin/env bash
+# chiroptera-hwd -- match an Arch install to its hardware.
+#
+#   chiroptera-hwd detect                 print the plan as JSON; changes nothing
+#   chiroptera-hwd apply [--yes]          carry the plan out (root)
+#   chiroptera-hwd apply --dry-run        print what apply would run and write
+#
+# CPU level, CachyOS repositories, kernel, microcode and the boot entry are
+# handled here. Graphics drivers are chwd's job: its profiles track which
+# NVIDIA generation needs which driver, and a copy of that table here would
+# only learn about new hardware by breaking on it.
+#
+# Every hardware input can be replaced through an HWD_* variable and every
+# path is prefixed by HWD_ROOT, so the tests run against captured machines
+# without touching this one. Sourcing the file defines the functions only.
+
+HWD_ROOT=${HWD_ROOT:-}
+
+die() { printf 'chiroptera-hwd: %s\n' "$1" >&2; exit 1; }
+
+usage() {
+    cat <<'EOF'
+usage: chiroptera-hwd detect
+       chiroptera-hwd apply [--yes] [--dry-run]
+EOF
+}
+
+# ---- detection ---------------------------------------------------------------
+
+ldso_help() {
+    if [[ -n ${HWD_LDSO_HELP:-} ]]; then
+        cat "$HWD_LDSO_HELP"
+    else
+        /lib/ld-linux-x86-64.so.2 --help
+    fi
+}
+
+# The loader marks a level "(supported, searched)" only when the CPU has every
+# feature the level requires -- AVX-512 included for v4, so Intel parts with
+# AVX-512 fused off correctly stop at v3.
+isa_supported() {  # level help-text
+    grep -qF "$1 (supported, searched)" <<<"$2"
+}
+
+cpu_vendor() {
+    awk -F': *' '/^vendor_id/ { print $2; exit }' "${HWD_CPUINFO:-/proc/cpuinfo}"
+}
+
+detect_level() {
+    local help vendor
+    help=$(ldso_help)
+    vendor=$(cpu_vendor)
+    if isa_supported x86-64-v4 "$help"; then
+        # Zen 4 and Zen 5 are the only AMD CPUs with AVX-512. CachyOS's own
+        # script asks gcc instead, which a base install does not have.
+        if [[ $vendor == AuthenticAMD ]]; then echo znver4; else echo v4; fi
+    elif isa_supported x86-64-v3 "$help"; then
+        echo v3
+    else
+        echo baseline
+    fi
+}
+
+detect_microcode() {
+    case $(cpu_vendor) in
+        AuthenticAMD) echo amd-ucode ;;
+        GenuineIntel) echo intel-ucode ;;
+    esac
+}
+
+detect_virt() {
+    if [[ -n ${HWD_VIRT:-} ]]; then
+        echo "$HWD_VIRT"
+        return
+    fi
+    local virt
+    # Prints "none" and exits 1 on bare metal.
+    virt=$(systemd-detect-virt 2>/dev/null) || true
+    echo "${virt:-none}"
+}
+
+sdboot_esp() {
+    local esp
+    for esp in /boot /efi /boot/efi; do
+        if [[ -f $HWD_ROOT$esp/loader/loader.conf ]]; then
+            echo "$HWD_ROOT$esp"
+            return 0
+        fi
+    done
+    return 1
+}
+
+detect_bootloader() {
+    if [[ -n ${HWD_BOOTLOADER:-} ]]; then
+        echo "$HWD_BOOTLOADER"
+    elif [[ -f $HWD_ROOT/boot/grub/grub.cfg ]]; then
+        echo grub
+    elif sdboot_esp >/dev/null; then
+        echo systemd-boot
+    else
+        echo unknown
+    fi
+}
+
+# ---- the plan ----------------------------------------------------------------
+
+repos_for() {  # level
+    case $1 in
+        baseline) echo cachyos ;;
+        v3)       echo cachyos-v3 cachyos-core-v3 cachyos-extra-v3 cachyos ;;
+        v4)       echo cachyos-v4 cachyos-core-v4 cachyos-extra-v4 cachyos ;;
+        znver4)   echo cachyos-znver4 cachyos-core-znver4 cachyos-extra-znver4 cachyos ;;
+        *)        die "unknown level: $1" ;;
+    esac
+}
+
+# v4 and znver4 share a mirrorlist: both live under the mirror's x86_64_v4 tree.
+mirrorlist_for_repo() {  # repo
+    case $1 in
+        cachyos) echo cachyos-mirrorlist ;;
+        *-v3)    echo cachyos-v3-mirrorlist ;;
+        *)       echo cachyos-v4-mirrorlist ;;
+    esac
+}
+
+mirrorlists_for() {  # level
+    local repo
+    for repo in $(repos_for "$1"); do
+        mirrorlist_for_repo "$repo"
+    done | awk '!seen[$0]++'
+}
+
+packages_for() {  # microcode virt
+    local -a pkgs=(linux-cachyos linux-cachyos-headers)
+    if [[ -n $1 ]]; then pkgs+=("$1"); fi
+    pkgs+=(cachyos-settings cachyos-ananicy-rules scx-scheds scx-tools chwd)
+    case $2 in
+        kvm|qemu) pkgs+=(qemu-guest-agent) ;;
+        oracle)   pkgs+=(virtualbox-guest-utils) ;;
+    esac
+    printf '%s\n' "${pkgs[@]}"
+}
+
+json_array() {  # words...
+    local out='' word
+    for word in "$@"; do
+        out+="${out:+, }\"$word\""
+    done
+    printf '[%s]' "$out"
+}
+
+cmd_detect() {
+    local level microcode virt bootloader
+    level=$(detect_level)
+    microcode=$(detect_microcode)
+    virt=$(detect_virt)
+    bootloader=$(detect_bootloader)
+
+    local -a repos pkgs
+    read -r -a repos <<<"$(repos_for "$level")"
+    mapfile -t pkgs < <(packages_for "$microcode" "$virt")
+
+    printf '{\n'
+    printf '  "level": "%s",\n' "$level"
+    printf '  "repos": %s,\n' "$(json_array "${repos[@]}")"
+    printf '  "packages": %s,\n' "$(json_array "${pkgs[@]}")"
+    printf '  "bootloader": "%s",\n' "$bootloader"
+    printf '  "virt": "%s",\n' "$virt"
+    printf '  "gpu": "chwd"\n'
+    printf '}\n'
+}
+
+# ---- entry point -------------------------------------------------------------
+
+main() {
+    case ${1:-} in
+        detect) shift; cmd_detect "$@" ;;
+        *)      usage >&2; exit 2 ;;
+    esac
+}
+
+# Strict mode only when executed: bats sources this file, and set -u would
+# leak into the test harness.
+if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
+    set -euo pipefail
+    main "$@"
+fi

@@ -1,0 +1,8 @@
+{
+  "level": "v3",
+  "repos": ["cachyos-v3", "cachyos-core-v3", "cachyos-extra-v3", "cachyos"],
+  "packages": ["linux-cachyos", "linux-cachyos-headers", "amd-ucode", "cachyos-settings", "cachyos-ananicy-rules", "scx-scheds", "scx-tools", "chwd"],
+  "bootloader": "grub",
+  "virt": "none",
+  "gpu": "chwd"
+}
