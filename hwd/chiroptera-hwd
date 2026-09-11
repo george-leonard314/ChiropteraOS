@@ -251,11 +251,171 @@ cmd_detect() {
     printf '}\n'
 }
 
+# ---- apply -------------------------------------------------------------------
+
+CACHYOS_KEY=F3B607488DB35A47
+CACHYOS_BOOTSTRAP_SERVER='https://mirror.cachyos.org/repo/$arch/$repo'
+DRY_RUN=0
+ASSUME_YES=0
+STAMP=
+TMPD=
+CURRENT_STEP=
+
+# Not named `run`: bats defines run(), and the tests source this file.
+runcmd() {
+    if (( DRY_RUN )); then
+        printf '+ %s\n' "$*"
+    else
+        "$@"
+    fi
+}
+
+pac() {
+    local -a flags=()
+    if (( ASSUME_YES )); then flags+=(--noconfirm); fi
+    runcmd pacman "${flags[@]}" "$@"
+}
+
+step() {
+    CURRENT_STEP=$1
+    printf '\n:: step %s\n' "$1"
+}
+
+# Put NEWFILE's content in TARGET, keeping a timestamped backup of what was
+# there. Identical content is left alone, so re-runs create no backups. A dry
+# run shows the change as a diff instead.
+replace_file() {  # target newfile
+    local old=$1
+    if [[ ! -e $1 ]]; then old=/dev/null; fi
+    if (( DRY_RUN )); then
+        diff -u --label "$1" --label "$1 (after)" "$old" "$2" || true
+        return 0
+    fi
+    if cmp -s "$old" "$2"; then return 0; fi
+    if [[ -e $1 ]]; then cp -a "$1" "$1.hwd-$STAMP"; fi
+    cat "$2" > "$1"
+}
+
+step_repositories() {  # level
+    local conf=$HWD_ROOT/etc/pacman.conf
+    local -a mirrorlists
+    mapfile -t mirrorlists < <(mirrorlists_for "$1")
+
+    runcmd pacman-key --recv-keys "$CACHYOS_KEY" --keyserver keyserver.ubuntu.com
+    runcmd pacman-key --lsign-key "$CACHYOS_KEY"
+
+    # The mirrorlists come from [cachyos] itself, which pacman.conf cannot name
+    # until they exist. A throwaway config pointing straight at the mirror
+    # breaks the loop. It runs before pacman.conf is touched, so an offline
+    # machine fails here with the file unchanged.
+    local boot=$TMPD/bootstrap.conf
+    cat > "$boot" <<EOF
+[options]
+Architecture = auto
+SigLevel = Required DatabaseOptional
+
+[cachyos]
+Server = $CACHYOS_BOOTSTRAP_SERVER
+EOF
+    pac --config "$boot" -Sy --needed cachyos-keyring "${mirrorlists[@]}"
+
+    local new=$TMPD/pacman.conf
+    edit_pacman_conf "$1" < "$conf" > "$new" || die "no [core] section in $conf"
+    replace_file "$conf" "$new"
+}
+
+step_graphics() {
+    # For review only: the table chwd prints is for people, not parsing.
+    if (( DRY_RUN )) && command -v chwd >/dev/null; then
+        chwd --list || true
+    fi
+    runcmd chwd -a
+}
+
+step_boot() {  # bootloader
+    local new=$TMPD/boot
+    case $1 in
+        grub)
+            edit_default_grub < "$HWD_ROOT/etc/default/grub" > "$new"
+            replace_file "$HWD_ROOT/etc/default/grub" "$new"
+            runcmd grub-mkconfig -o /boot/grub/grub.cfg
+            ;;
+        systemd-boot)
+            local esp stock
+            esp=$(sdboot_esp) || die "systemd-boot detected but no loader.conf found"
+            stock=$(stock_sdboot_entry "$esp") \
+                || die "no entry with initrd /initramfs-linux.img in $esp/loader/entries to copy"
+            sdboot_entry_from < "$stock" > "$new"
+            replace_file "$esp/loader/entries/linux-cachyos.conf" "$new"
+            edit_loader_conf < "$esp/loader/loader.conf" > "$new.loader"
+            replace_file "$esp/loader/loader.conf" "$new.loader"
+            ;;
+        *)
+            echo "bootloader not recognised: make linux-cachyos the default entry by hand"
+            ;;
+    esac
+}
+
+cmd_apply() {
+    while (($#)); do
+        case $1 in
+            --dry-run) DRY_RUN=1 ;;
+            --yes)     ASSUME_YES=1 ;;
+            *)         die "unknown option: $1" ;;
+        esac
+        shift
+    done
+    if (( ! DRY_RUN )) && [[ $EUID -ne 0 ]]; then
+        die "apply must run as root (or pass --dry-run)"
+    fi
+
+    STAMP=$(date +%Y%m%d-%H%M%S)
+    TMPD=$(mktemp -d)
+    # A failed step is fixed and re-run, never rolled back: every step is
+    # idempotent, so naming where it stopped is all the recovery needed.
+    trap 'rc=$?; rm -rf "$TMPD"
+          if (( rc )) && [[ -n $CURRENT_STEP ]]; then
+              printf "chiroptera-hwd: stopped at step %s; fix the cause and run apply again\n" "$CURRENT_STEP" >&2
+          fi' EXIT
+
+    local level microcode virt bootloader
+    level=$(detect_level)
+    microcode=$(detect_microcode)
+    virt=$(detect_virt)
+    bootloader=$(detect_bootloader)
+    local -a pkgs
+    mapfile -t pkgs < <(packages_for "$microcode" "$virt")
+
+    step "1/5: CachyOS repositories ($level)"
+    step_repositories "$level"
+
+    # Arch's pacman rejects x86_64_v3/v4 packages, so it cannot perform the
+    # upgrade itself. The fork's own package is plain x86_64 and installs fine.
+    step "2/5: CachyOS pacman, then the upgrade"
+    pac -Sy --needed cachyos/pacman
+    pac -Syu
+
+    step "3/5: kernel and CachyOS packages"
+    pac -S --needed "${pkgs[@]}"
+
+    # After step 3 on purpose: chwd picks the prebuilt NVIDIA module only for
+    # kernels it can already see installed.
+    step "4/5: graphics drivers (chwd)"
+    step_graphics
+
+    step "5/5: boot entry ($bootloader)"
+    step_boot "$bootloader"
+
+    CURRENT_STEP=
+    printf '\nchiroptera-hwd: done. Reboot into linux-cachyos; stock linux remains in the boot menu.\n'
+}
+
 # ---- entry point -------------------------------------------------------------
 
 main() {
     case ${1:-} in
         detect) shift; cmd_detect "$@" ;;
+        apply)  shift; cmd_apply "$@" ;;
         *)      usage >&2; exit 2 ;;
     esac
 }
