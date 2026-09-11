@@ -55,7 +55,14 @@ jobs:
     name: chiroptera-hwd apply in a container
     needs: hwd-tests
     runs-on: ubuntu-latest
-    container: archlinux:base-devel
+    # Privileged: pacman's post-transaction hooks (mkinitcpio, depmod,
+    # systemd) each try to unshare the network sandbox, which an
+    # unprivileged container cannot grant. Without it every hook fails
+    # silently -- pacman does not fail the transaction over a failed hook --
+    # and no initramfs is ever built for the test to check.
+    container:
+      image: archlinux:base-devel
+      options: --privileged
     steps:
       - name: Install git
         run: pacman -Sy --needed --noconfirm git

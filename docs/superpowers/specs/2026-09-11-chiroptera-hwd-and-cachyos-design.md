@@ -252,8 +252,9 @@ Three layers, cheapest first:
    `linux-cachyos` is installed, `pacman.conf` has the level's sections above
    `[core]`, and the installed `pacman` version equals `cachyos/pacman`'s.
    This is also the check that the two-transaction upgrade in step 2 is
-   needed and sufficient. It runs without privileges, so no initramfs is
-   built; see `docs/hwd.md` for what that gap still needs.
+   needed and sufficient. The container runs `--privileged` so pacman's hooks
+   run, and the test asserts `/boot/initramfs-linux-cachyos.img` exists,
+   because pacman does not fail a transaction over a failed hook.
 3. **The laptop, by hand, gated.** See below.
 
 ## On the author's laptop

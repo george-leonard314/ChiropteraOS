@@ -86,14 +86,10 @@ at step 4; installing it rebuilds the image and the error goes away.
         bash -c 'pacman -Sy --needed --noconfirm bats >/dev/null && ci/test-hwd.sh'
 
     # a real apply in a throwaway container
-    docker run --rm -v "$PWD:/work:ro" -w /work archlinux:base-devel ci/hwd-apply-test.sh
+    docker run --rm --privileged -v "$PWD:/work:ro" -w /work archlinux:base-devel ci/hwd-apply-test.sh
 
 Both run in CI on every push that touches `hwd/`, `ci/` or `pkgs/`.
 
-The container apply test runs without privileges, so pacman's post-transaction
-hooks cannot run and no initramfs is built. It proves the repositories, the
-pacman switch, the upgrade and the package install, not the boot image.
-Closing that gap takes both running the container `--privileged` (so hooks
-run) and asserting `/boot/initramfs-linux-cachyos.img` exists, because pacman
-does not fail on a failed hook. Until then, the first real initramfs build is
-the laptop apply.
+The container apply test runs `--privileged` so pacman's post-transaction
+hooks can run, and asserts `/boot/initramfs-linux-cachyos.img` exists,
+because pacman does not fail a transaction over a failed hook.
