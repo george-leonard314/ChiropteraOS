@@ -153,6 +153,14 @@ rather than rolled back.
      Architecture line to convert, is refused rather than guessed at: there
      is no reliable place to anchor an inserted `Architecture = auto` line.
 2. **Upgrade, in two transactions.**
+   - `step_drop_stock_nvidia`: if `nvidia-open` is installed, removes it
+     before either transaction runs. `nvidia-open` and
+     `linux-cachyos-nvidia-open` (7.2.4-3) each pin `nvidia-utils` to their
+     own version, but CachyOS can move `nvidia-utils` (and
+     `opencl`/`lib32`/`settings`) ahead of the version `nvidia-open` pins --
+     observed 2026-09-11 with 615.71.09 vs 610.57.04 -- and while
+     `nvidia-open` stays installed, no `pacman -Syu` can satisfy both pins
+     at once.
    - `pacman -Syy --needed cachyos/pacman` first. The `-Syy` forces a fresh
      sync of every database, refreshing the `cachyos.db` the bootstrap step
      fetched from `mirror.cachyos.org` with what the level's mirrorlist
@@ -168,8 +176,10 @@ rather than rolled back.
    chooses the profile and installs it itself, without prompting; it is the
    one step in apply that pacman does not ask about. `step_fallback_nvidia`
    then runs: once `chwd` has installed CachyOS's prebuilt
-   `linux-cachyos-nvidia-open`, it removes `nvidia-open` and writes the
-   mkinitcpio drop-in described under Invariants below.
+   `linux-cachyos-nvidia-open`, or `nvidia-open` was removed at step 2, it
+   writes the mkinitcpio drop-in described under Invariants below, and
+   rebuilds the fallback image if the drop-in changed or `nvidia-open` was
+   removed.
 5. **Boot.**
    - GRUB: set `GRUB_TOP_LEVEL="/boot/vmlinuz-linux-cachyos"` in
      `/etc/default/grub`, then `grub-mkconfig -o /boot/grub/grub.cfg`.
@@ -183,19 +193,23 @@ Invariants:
 
 - **Never removes stock `linux`.** It remains installed and bootable as the
   fallback entry.
-- **Removes `nvidia-open` once the prebuilt CachyOS module is in.** Because
-  pacman takes a package from the first repository that has it, and
-  `[cachyos]` sits above `[core]`/`[extra]`, `nvidia-open` normally comes
-  from CachyOS's rebuild after the upgrade -- and that rebuild can lag an
-  Arch kernel bump, leaving the fallback kernel without a matching NVIDIA
-  module. `nvidia-open-dkms` cannot replace it either: it Conflicts With the
-  `NVIDIA-MODULE` that `linux-cachyos-nvidia-open`, chwd's prebuilt module
-  for `linux-cachyos`, provides. So once chwd has installed that prebuilt
-  module, `step_fallback_nvidia` removes `nvidia-open` and writes
+- **Removes `nvidia-open` before the upgrade.** `nvidia-open` (the
+  stock-kernel module) and `linux-cachyos-nvidia-open` (chwd's prebuilt
+  module for `linux-cachyos`) each pin `nvidia-utils` to their own version.
+  CachyOS can move `nvidia-utils` ahead of the version `nvidia-open` pins --
+  observed 2026-09-11 with 615.71.09 vs 610.57.04 -- and while `nvidia-open`
+  stays installed, no `pacman -Syu` can complete. `step_drop_stock_nvidia`
+  removes it at the start of step 2, before either upgrade transaction runs.
+  `nvidia-open-dkms` cannot be installed instead: it Conflicts With the
+  `NVIDIA-MODULE` that `linux-cachyos-nvidia-open` provides. Once chwd has
+  installed that prebuilt module at step 4, or `nvidia-open` was removed at
+  step 2, `step_fallback_nvidia` writes
   `/etc/mkinitcpio.conf.d/90-chiroptera-hwd.conf`, a drop-in that drops the
   NVIDIA modules from `MODULES` for any kernel with no matching `nvidia.ko`
-  under `/usr/lib/modules/$KERNELVERSION`. The fallback then boots on the
-  integrated GPU instead of failing to load a module it does not have.
+  under `/usr/lib/modules/$KERNELVERSION`, and rebuilds the fallback image
+  when the drop-in changed or `nvidia-open` was removed. The fallback then
+  boots on the integrated GPU instead of failing to load a module it does
+  not have.
 - **Never edits or deletes a file it did not write,** apart from the
   `pacman.conf` and `/etc/default/grub` changes above, both of which it backs
   up. On the laptop that leaves `/etc/modprobe.d/nvidia.conf`, the `MODULES`
@@ -331,3 +345,16 @@ Settled from `chwd`'s source and CachyOS's `cachyos-repo.sh`; the plan is
    the fallback boots on the integrated GPU and never carries a stale
    NVIDIA module (the author's displays are on amdgpu and
    DisplayLink/evdi, not NVIDIA). See `step_fallback_nvidia` above.
+9. **Nvidia-utils version pin blocked `-Syu`, fixed 2026-09-11.** Found on
+   the author's laptop: a real `apply` stopped at step 2 with `unable to
+   satisfy dependency 'nvidia-utils=610.57.04' required by nvidia-open`.
+   CachyOS had moved `nvidia-utils`/`opencl`/`lib32`/`settings` to
+   615.71.09, while `linux-cachyos-nvidia-open` 7.2.4-3 and Arch's
+   `nvidia-open` both still pinned `nvidia-utils=610.57.04`; with
+   `nvidia-open` installed, no `pacman -Syu` could satisfy both pins at
+   once. `step_drop_stock_nvidia` now removes `nvidia-open` at the start of
+   step 2, before the upgrade, instead of waiting for
+   `step_fallback_nvidia` at the end of step 4. `step_fallback_nvidia` no
+   longer removes anything; it writes the drop-in and rebuilds the fallback
+   image when either `linux-cachyos-nvidia-open` is installed or
+   `nvidia-open` was removed earlier in the run.

@@ -21,9 +21,12 @@ Read the dry run before applying. It is the whole change.
    key `F3B607488DB35A47`, installs `cachyos-keyring` and the mirrorlists,
    then inserts the CachyOS sections for the CPU level directly above
    `[core]` in `/etc/pacman.conf`.
-2. Installs CachyOS's pacman with `pacman -Syy --needed` -- the `-Syy` forces
-   a fresh sync, refreshing the database the bootstrap step fetched -- then
-   runs a full upgrade onto CachyOS packages.
+2. Removes `nvidia-open` if it is installed: it pins `nvidia-utils` to its
+   own version, and once CachyOS's build moves that package ahead, the pin
+   blocks the upgrade below. Then installs CachyOS's pacman with
+   `pacman -Syy --needed` -- the `-Syy` forces a fresh sync, refreshing the
+   database the bootstrap step fetched -- then runs a full upgrade onto
+   CachyOS packages.
 3. Installs `linux-cachyos`, its headers, microcode, `cachyos-settings`,
    `cachyos-ananicy-rules`, `scx-scheds`, `scx-tools` and `chwd`.
 4. Runs `chwd -a` for graphics drivers. `chwd` chooses the profile itself and
@@ -31,9 +34,11 @@ Read the dry run before applying. It is the whole change.
    about. `chwd --list` after step 3 previews the profile it will pick; the
    dry run cannot show it, because chwd is not installed until step 3 runs.
    Once chwd has installed CachyOS's prebuilt `linux-cachyos-nvidia-open`,
-   hwd removes `nvidia-open` and writes
+   or `nvidia-open` was removed in step 2, hwd writes
    `/etc/mkinitcpio.conf.d/90-chiroptera-hwd.conf`, a drop-in that drops the
-   NVIDIA modules for any kernel with no matching `nvidia.ko`.
+   NVIDIA modules for any kernel with no matching `nvidia.ko`, and rebuilds
+   the fallback image with `mkinitcpio -p linux` when the drop-in changed or
+   `nvidia-open` was removed.
 5. Makes `linux-cachyos` the default boot entry: `GRUB_TOP_LEVEL` plus
    `grub-mkconfig` on GRUB; a copied entry plus `default` in `loader.conf` on
    systemd-boot. With no recognised bootloader it changes nothing and prints
@@ -48,9 +53,10 @@ while stock `linux` still comes from Arch. CachyOS's `nvidia-open` rebuild
 can lag an Arch kernel update, leaving the fallback kernel without a
 matching NVIDIA module; `nvidia-open-dkms` cannot stand in for it either,
 because it Conflicts With the `NVIDIA-MODULE` that `linux-cachyos-nvidia-open`
-provides. So once chwd has installed that prebuilt module, hwd removes
-`nvidia-open` and writes the mkinitcpio drop-in above instead: the fallback
-boots on the integrated GPU and never carries a stale NVIDIA module.
+provides. So step 2 removes `nvidia-open` before it can block the upgrade,
+and once chwd has installed that prebuilt module, hwd writes the mkinitcpio
+drop-in above: the fallback boots on the integrated GPU and never carries a
+stale NVIDIA module.
 
 If a step fails, apply names it and stops. Fix the cause and run apply again;
 every step is safe to repeat.
