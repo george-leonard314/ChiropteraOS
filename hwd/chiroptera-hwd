@@ -301,6 +301,10 @@ step_repositories() {  # level
     local -a mirrorlists
     mapfile -t mirrorlists < <(mirrorlists_for "$1")
 
+    # Creates a master key only when the keyring has none (a bare/freshly
+    # pulled keyring, or possibly a Calamares target chroot); a no-op on an
+    # already-initialized system. --lsign-key below needs one to exist.
+    runcmd pacman-key --init
     runcmd pacman-key --recv-keys "$CACHYOS_KEY" --keyserver keyserver.ubuntu.com
     runcmd pacman-key --lsign-key "$CACHYOS_KEY"
 

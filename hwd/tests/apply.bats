@@ -59,11 +59,13 @@ line_of() {  # fixed-string -> first line number in $output
     run dry_run_laptop
     [ "$status" -eq 0 ]
 
+    grep -qF '+ pacman-key --init' <<<"$output"
     grep -qF '+ pacman-key --recv-keys F3B607488DB35A47 --keyserver keyserver.ubuntu.com' <<<"$output"
     grep -qF 'cachyos-keyring cachyos-v3-mirrorlist cachyos-mirrorlist' <<<"$output"
     grep -qx '+\[cachyos-v3\]' <<<"$output"
     grep -qx '+GRUB_TOP_LEVEL="/boot/vmlinuz-linux-cachyos"' <<<"$output"
 
+    init=$(line_of '+ pacman-key --init')
     keys=$(line_of '+ pacman-key --recv-keys')
     conf=$(line_of '+[cachyos-v3]')
     fork=$(line_of '+ pacman -Sy --needed cachyos/pacman')
@@ -72,6 +74,7 @@ line_of() {  # fixed-string -> first line number in $output
     chwd=$(line_of '+ chwd -a')
     grub=$(line_of '+GRUB_TOP_LEVEL=')
     mkconfig=$(line_of '+ grub-mkconfig -o /boot/grub/grub.cfg')
+    [ "$init" -lt "$keys" ]
     [ "$keys" -lt "$conf" ]
     [ "$conf" -lt "$fork" ]
     [ "$fork" -lt "$upgrade" ]
