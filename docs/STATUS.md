@@ -1,6 +1,6 @@
 # Where the build stands
 
-Updated 2026-09-10.
+Updated 2026-09-11.
 
 ## Done
 
@@ -17,13 +17,18 @@ packaged as `chiroptera-dots` and `chiroptera-meta`, and installed. The laptop's
 `~/.config` links into the repo. Caelestia's packages and directories were
 removed afterwards with nothing left depending on them.
 
+**Step 5, build half — chiroptera-hwd.** `hwd/chiroptera-hwd` detects the CPU
+level and applies the CachyOS repositories, pacman, kernel, microcode and boot
+entry, with graphics delegated to `chwd`. Packaged as `chiroptera-hwd`; a bats
+suite and a real apply in a container run in CI. See `docs/hwd.md`.
+
 ## Remaining
 
 | Step | Work |
 |---|---|
 | 3 | Theme, logo and bar composition — largely done during step 2 |
 | 4 | Publishing: choose a host and wire up the `publish` job (build CI is done) |
-| 5 | `chiroptera-hwd` hardware detection, plus the CachyOS kernel and repos |
+| 5 | `chiroptera-hwd` is built and tested; applying it to the laptop awaits the author's review of the dry run |
 | 6 | The ISO: archiso profile, live desktop, Calamares |
 | 7 | The AI sidebar plugin |
 | 8 | Upstream sync tooling and the greeter rebrand |

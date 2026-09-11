@@ -76,10 +76,10 @@ the `chwd` repository.
 | `ci/hwd-apply-test.sh` | Runs `apply` for real in a fresh Arch container |
 | `docs/hwd.md` | Usage, what `apply` changes, and the manual undo |
 
-`chiroptera-hwd` depends on `bash`, `pciutils` and `util-linux` only. It must
-not depend on `chwd` or anything else in `[cachyos]`: hwd is what adds that
-repository, so such a dependency would be unresolvable from the `chiroptera`
-repository alone.
+`chiroptera-hwd` depends on `bash`, `gawk`, `diffutils`, `pciutils` and
+`systemd` only. It must not depend on `chwd` or anything else in `[cachyos]`:
+hwd is what adds that repository, so such a dependency would be unresolvable
+from the `chiroptera` repository alone.
 
 ## `detect`
 
@@ -94,7 +94,6 @@ fixture file:
 | CPU vendor and flags | `/proc/cpuinfo` | `HWD_CPUINFO` |
 | Virtualisation | `systemd-detect-virt` | `HWD_VIRT` |
 | Bootloader | `/boot/grub/grub.cfg`, `bootctl is-installed` | `HWD_BOOTLOADER` |
-| GPU profile | `chwd --list` if present, else `none` | `HWD_CHWD_PROFILE` |
 
 Decisions:
 
@@ -125,12 +124,12 @@ Output for the author's laptop:
                "scx-scheds", "scx-tools", "chwd"],
   "bootloader": "grub",
   "virt": "none",
-  "gpu_profile": "none"
+  "gpu": "chwd"
 }
 ```
 
-`gpu_profile` reads `none` until `chwd` is installed; `apply --dry-run` after
-step 3 shows the real profile.
+`gpu` is always `chwd`: the profile is chwd's decision, and `apply --dry-run`
+shows it.
 
 ## `apply`
 
@@ -138,6 +137,7 @@ Runs as root. Each step is idempotent, so a failed run is fixed and re-run
 rather than rolled back.
 
 1. **Repositories.**
+   - `pacman-key --init`, which creates a master key only when none exists.
    - Copy `/etc/pacman.conf` to `/etc/pacman.conf.hwd-<timestamp>`.
    - `pacman-key --recv-keys F3B607488DB35A47` and `--lsign-key`, then install
      `cachyos-keyring` and the mirrorlists for the level. These are fetched as
@@ -176,6 +176,8 @@ Invariants:
   up. On the laptop that leaves `/etc/modprobe.d/nvidia.conf`, the `MODULES`
   line in `mkinitcpio.conf` and all of `~/.config/hypr` as they are. The
   `MODULES` duplicated by `chwd`'s `10-chwd.conf` is harmless.
+  `pacman-key --init` may add missing default options to pacman's own
+  keyring `gpg.conf`; that file is managed by pacman-key.
 - **Writes no session environment.**
 
 `apply --dry-run` prints each command in order instead of running it.
@@ -196,9 +198,9 @@ Invariants:
 Documented in `docs/hwd.md`, not shipped as a command:
 
 1. Boot the stock `linux` entry.
-2. Restore the newest `/etc/pacman.conf.hwd-*` backup.
-3. `pacman -S core/pacman`, then `pacman -Qqn | pacman -S -` to reinstall
-   every native package from Arch's repositories.
+2. Restore the oldest `/etc/pacman.conf.hwd-*` backup.
+3. `pacman -Suuy`, then `pacman -S core/pacman`, then `pacman -Qqn | pacman -S -`
+   to reinstall every native package from Arch's repositories.
 4. Remove `linux-cachyos*`, `chwd`, `cachyos-*` and the CachyOS keyring, and
    `pacman-key --delete F3B607488DB35A47`.
 5. Remove `GRUB_TOP_LEVEL` and regenerate `grub.cfg`.
@@ -223,7 +225,8 @@ Three layers, cheapest first:
    `linux-cachyos` is installed, `pacman.conf` has the level's sections above
    `[core]`, and the installed `pacman` version equals `cachyos/pacman`'s.
    This is also the check that the two-transaction upgrade in step 2 is
-   needed and sufficient.
+   needed and sufficient. It runs without privileges, so no initramfs is
+   built; see `docs/hwd.md` for what that gap still needs.
 3. **The laptop, by hand, gated.** See below.
 
 ## On the author's laptop
@@ -243,3 +246,29 @@ The ISO and Calamares (step 6), beyond making `apply` runnable in a chroot.
 Any change to `chiroptera-dots`, including the hybrid-GPU notes in `env.conf`.
 Publishing `chiroptera-hwd` to a hosted repository, which waits on the step 4
 hosting decision like every other package.
+
+## Refinements made while planning
+
+Settled from `chwd`'s source and CachyOS's `cachyos-repo.sh`; the plan is
+`docs/superpowers/plans/2026-09-11-step5-chiroptera-hwd.md`.
+
+1. `detect` reports `"gpu": "chwd"` rather than a profile name: `chwd --list`
+   prints a table for people, not an interface. `apply --dry-run` prints it
+   verbatim. The `HWD_CHWD_PROFILE` override is dropped.
+2. The keyring and mirrorlists are installed through a throwaway pacman config
+   pointing `[cachyos]` at `https://mirror.cachyos.org/repo/$arch/$repo`,
+   instead of version-pinned package URLs, which go stale. It still precedes
+   the `pacman.conf` edit.
+3. `apply --yes` passes `--noconfirm` to pacman; Calamares and CI use it.
+4. Package dependencies are `bash gawk diffutils pciutils systemd`;
+   `util-linux` is dropped because detection does not use `lscpu`.
+5. The systemd-boot entry is copied from the entry whose initrd is
+   `/initramfs-linux.img`, which excludes the fallback entry.
+6. Undo restores the oldest `pacman.conf` backup, which is the file before hwd
+   first ran, and follows `cachyos-repo.sh --remove`'s order: `-Suuy`,
+   `core/pacman`, then reinstall every native package.
+7. Step 1 runs `pacman-key --init` before importing the CachyOS key.
+   `--lsign-key` needs a local master key, which the official Arch container
+   image lacks and a fresh chroot may lack; `--init` creates one only when
+   none exists and otherwise changes nothing. Found by the container apply
+   test.
