@@ -3,9 +3,9 @@ name: packages
 on:
   push:
     branches: [main]
-    paths: ['pkgs/**', 'ci/**', '.github/workflows/packages.yml']
+    paths: ['pkgs/**', 'ci/**', 'hwd/**', '.github/workflows/packages.yml']
   pull_request:
-    paths: ['pkgs/**', 'ci/**', '.github/workflows/packages.yml']
+    paths: ['pkgs/**', 'ci/**', 'hwd/**', '.github/workflows/packages.yml']
   workflow_dispatch:
     inputs:
       force_rebuild:
@@ -37,6 +37,33 @@ jobs:
       - name: Check every PKGBUILD parses
         # makepkg refuses to run as root, even for --printsrcinfo.
         run: sudo -u builder ./ci/lint-pkgbuilds.sh
+
+  hwd-tests:
+    name: chiroptera-hwd tests
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    steps:
+      - name: Install git and bats
+        run: pacman -Sy --needed --noconfirm git bats
+
+      - uses: actions/checkout@v7
+
+      - name: Run the bats suite
+        run: ./ci/test-hwd.sh
+
+  hwd-apply:
+    name: chiroptera-hwd apply in a container
+    needs: hwd-tests
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    steps:
+      - name: Install git
+        run: pacman -Sy --needed --noconfirm git
+
+      - uses: actions/checkout@v7
+
+      - name: Apply for real and check the result
+        run: ./ci/hwd-apply-test.sh
 
   build:
     name: Build repository
