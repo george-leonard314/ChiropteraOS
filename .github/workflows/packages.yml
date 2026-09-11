@@ -54,6 +54,8 @@ jobs:
   hwd-apply:
     name: chiroptera-hwd apply in a container
     needs: hwd-tests
+    # Fork pull requests must not get a privileged container.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     # Privileged: pacman's post-transaction hooks (mkinitcpio, depmod,
     # systemd) each try to unshare the network sandbox, which an
