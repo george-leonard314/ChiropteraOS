@@ -149,11 +149,11 @@ rather than rolled back.
    - Set `Architecture = auto`.
    - A section already present is not added again.
 2. **Upgrade, in two transactions.**
-   - `pacman -Sy cachyos/pacman` first. Arch's pacman rejects packages whose
-     architecture is `x86_64_v3` or `x86_64_v4` under `Architecture = auto`,
-     so it cannot perform the upgrade itself; the fork's own package is plain
-     `x86_64` and installs fine. CachyOS's `cachyos-repo.sh` orders it the same
-     way for the same reason.
+   - `pacman -Sy --needed cachyos/pacman` first. Arch's pacman rejects
+     packages whose architecture is `x86_64_v3` or `x86_64_v4` under
+     `Architecture = auto`, so it cannot perform the upgrade itself; the
+     fork's own package is plain `x86_64` and installs fine. CachyOS's
+     `cachyos-repo.sh` orders it the same way for the same reason.
    - `pacman -Syu` with the fork. The level's rebuilds replace Arch's packages.
 3. **Packages.** `pacman -S --needed` the `packages` list from `detect`, plus
    guest tools on a VM.
