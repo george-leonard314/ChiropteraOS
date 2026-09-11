@@ -358,6 +358,80 @@ step_graphics() {
         fi
     fi
     runcmd chwd -a
+    step_fallback_nvidia
+}
+
+# True when NAME is installed. HWD_INSTALLED (test override, same pattern as
+# the other HWD_* inputs) points at a file of installed package names, one
+# per line, instead of asking pacman.
+installed_pkg() {  # name
+    if [[ -n ${HWD_INSTALLED:-} ]]; then
+        grep -qxF "$1" "$HWD_INSTALLED"
+    else
+        pacman -Q "$1" >/dev/null 2>&1
+    fi
+}
+
+# The mkinitcpio drop-in that keeps a kernel with no NVIDIA module (the stock
+# fallback) off the NVIDIA modules mkinitcpio.conf and chwd's 10-chwd.conf
+# list. A kernel that does have nvidia.ko is untouched, so a genuinely
+# missing module still errors there.
+nvidia_dropin() {
+    cat <<'EOF'
+# Written by chiroptera-hwd; see docs/hwd.md.
+# A kernel with no NVIDIA module (the stock fallback, which runs on the
+# integrated GPU) cannot load the NVIDIA modules that mkinitcpio.conf and
+# chwd's 10-chwd.conf list, so drop them for that kernel only. A kernel that
+# has nvidia.ko keeps them, so a genuinely missing module still errors there.
+if [[ -n ${KERNELVERSION:-} ]] \
+    && ! compgen -G "/usr/lib/modules/$KERNELVERSION/*/nvidia.ko*" >/dev/null \
+    && ! compgen -G "/usr/lib/modules/$KERNELVERSION/*/*/nvidia.ko*" >/dev/null; then
+    _hwd_modules=()
+    for _hwd_m in "${MODULES[@]}"; do
+        case ${_hwd_m%\?} in
+            nvidia|nvidia_modeset|nvidia_uvm|nvidia_drm) ;;
+            *) _hwd_modules+=("$_hwd_m") ;;
+        esac
+    done
+    MODULES=("${_hwd_modules[@]}")
+    unset _hwd_modules _hwd_m
+fi
+EOF
+}
+
+# Runs once CachyOS's prebuilt linux-cachyos-nvidia-open is installed (chwd
+# installs it at step 4): removes Arch's nvidia-open, which CachyOS's own
+# nvidia-open build can lag behind an Arch kernel bump, and writes the
+# drop-in so the fallback kernel never carries a stale NVIDIA module.
+# Idempotent: identical content and an already-removed package rerun no
+# mkinitcpio.
+step_fallback_nvidia() {
+    if ! installed_pkg linux-cachyos-nvidia-open; then
+        if (( DRY_RUN )); then
+            printf 'linux-cachyos-nvidia-open is not installed yet: chwd installs it at step 4, and hwd then removes nvidia-open and writes the mkinitcpio drop-in.\n'
+        fi
+        return
+    fi
+
+    local dropin=$HWD_ROOT/etc/mkinitcpio.conf.d/90-chiroptera-hwd.conf
+    local new=$TMPD/90-chiroptera-hwd.conf
+    nvidia_dropin > "$new"
+    local old=$dropin changed=0
+    if [[ ! -e $dropin ]]; then old=/dev/null; fi
+    if ! cmp -s "$old" "$new"; then changed=1; fi
+
+    runcmd mkdir -p "$HWD_ROOT/etc/mkinitcpio.conf.d"
+    replace_file "$dropin" "$new"
+
+    local removed=0
+    if installed_pkg nvidia-open; then
+        pac -R nvidia-open
+        removed=1
+    fi
+
+    if (( changed || removed )) && installed_pkg linux; then
+        runcmd mkinitcpio -p linux
+    fi
 }
 
 step_boot() {  # bootloader
