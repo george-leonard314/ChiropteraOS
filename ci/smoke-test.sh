@@ -68,4 +68,14 @@ for required in app2unit chiroptera-shell chiroptera-dots; do
         || fail "$required was not part of resolving $TARGET"
 done
 
-echo "ok: $TARGET resolves against the built repository"
+# chiroptera-hwd adds the CachyOS repositories, so it must resolve without
+# them: from Arch plus this repository alone.
+echo "resolving chiroptera-hwd"
+if ! resolution=$(pac -Sp --noconfirm chiroptera-hwd 2>&1); then
+    printf '%s\n' "$resolution" >&2
+    fail "chiroptera-hwd does not resolve; it must not need [cachyos]"
+fi
+grep -q "/chiroptera-hwd-" <<<"$resolution" \
+    || fail "chiroptera-hwd was not served by the built repository"
+
+echo "ok: $TARGET and chiroptera-hwd resolve against the built repository"

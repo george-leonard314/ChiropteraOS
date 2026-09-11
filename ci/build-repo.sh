@@ -17,13 +17,14 @@ FORCE_REBUILD=${FORCE_REBUILD:-0}
 
 # Dependencies before dependents. Overridable so a local run can exercise the
 # script without recompiling the shell.
-read -r -a packages <<<"${PACKAGES:-app2unit chiroptera-shell chiroptera-dots chiroptera-meta}"
+read -r -a packages <<<"${PACKAGES:-app2unit chiroptera-shell chiroptera-dots chiroptera-meta chiroptera-hwd}"
 
 # Dependency handling, per package:
 #
 #   --syncdeps  chiroptera-shell compiles; app2unit renders man pages with
 #               scdoc. Both genuinely need their makedepends installed.
-#   --nodeps    chiroptera-dots and chiroptera-meta have no build() at all.
+#   --nodeps    chiroptera-dots, chiroptera-meta and chiroptera-hwd have no
+#               build() at all.
 #               Installing their runtime dependencies would pull hundreds of
 #               megabytes into the builder and prove nothing about whether the
 #               published repository resolves. smoke-test.sh proves that.
@@ -32,6 +33,7 @@ declare -A extra_flags=(
     [chiroptera-shell]="--syncdeps"
     [chiroptera-dots]="--nodeps"
     [chiroptera-meta]="--nodeps"
+    [chiroptera-hwd]="--nodeps"
 )
 
 mkdir -p "$REPO_DIR"

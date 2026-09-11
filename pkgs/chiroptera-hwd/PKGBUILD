@@ -1,0 +1,23 @@
+# Maintainer: George (ChiropteraOS)
+
+pkgname=chiroptera-hwd
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Match an Arch install to its hardware: CachyOS repositories, kernel, microcode, boot entry'
+arch=('any')
+url='https://github.com/george-leonard314/ChiropteraOS'
+license=('MIT')
+# chwd and everything else from [cachyos] is deliberately absent: hwd is what
+# adds that repository, so depending on it would make this package
+# unresolvable from the chiroptera repository alone.
+depends=('bash' 'gawk' 'diffutils' 'pciutils' 'systemd')
+# The script lives in this repository under hwd/; the symlink beside this
+# PKGBUILD makes it a local source. It changes with this repository, so there
+# is no checksum to keep -- bump pkgver whenever it changes, since CI skips any
+# version it has already built.
+source=('chiroptera-hwd')
+sha256sums=('SKIP')
+
+package() {
+    install -Dm755 "$srcdir/chiroptera-hwd" "$pkgdir/usr/bin/chiroptera-hwd"
+}
