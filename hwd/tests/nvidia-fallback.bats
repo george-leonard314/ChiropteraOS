@@ -96,32 +96,38 @@ line_of() {  # fixed-string -> first line number in $output
     grep -nF -- "$1" <<<"$output" | head -n1 | cut -d: -f1
 }
 
-@test "dry run with nvidia-open installed: drop-in, removal, and mkinitcpio, in order" {
+@test "A: nvidia-open removed before step 2's upgrade; drop-in and mkinitcpio after chwd" {
     laptop_root
     printf 'linux\nnvidia-open\nlinux-cachyos-nvidia-open\n' > "$WORK/installed"
 
     run dry_run_laptop
     [ "$status" -eq 0 ]
 
-    grep -qF '+# Written by chiroptera-hwd' <<<"$output"
     grep -qF '+ pacman -R nvidia-open' <<<"$output"
+    grep -qF '+# Written by chiroptera-hwd' <<<"$output"
     grep -qF '+ mkinitcpio -p linux' <<<"$output"
 
+    rm=$(line_of '+ pacman -R nvidia-open')
+    syyneeded=$(line_of '+ pacman -Syy --needed cachyos/pacman')
+    syu=$(line_of '+ pacman -Syu')
     chwd=$(line_of '+ chwd -a')
     dropin=$(line_of '+# Written by chiroptera-hwd')
-    rm=$(line_of '+ pacman -R nvidia-open')
     mkinitcpio=$(line_of '+ mkinitcpio -p linux')
     step5=$(line_of ':: step 5/5')
+
+    [ "$rm" -lt "$syyneeded" ]
+    [ "$rm" -lt "$syu" ]
     [ "$chwd" -lt "$dropin" ]
-    [ "$dropin" -lt "$rm" ]
-    [ "$rm" -lt "$mkinitcpio" ]
+    [ "$dropin" -lt "$mkinitcpio" ]
     [ "$mkinitcpio" -lt "$step5" ]
+
+    [ "$(grep -c -- '-R nvidia-open' <<<"$output")" -eq 1 ]
 
     [ -z "$(find "$WORK/root" -name '*.hwd-*')" ]
     [ ! -e "$WORK/root/etc/mkinitcpio.conf.d/90-chiroptera-hwd.conf" ]
 }
 
-@test "dry run with only linux-cachyos-nvidia-open installed: no removal, drop-in and mkinitcpio still appear" {
+@test "B: only linux-cachyos-nvidia-open installed: no removal, drop-in and mkinitcpio still appear" {
     laptop_root
     printf 'linux\nlinux-cachyos-nvidia-open\n' > "$WORK/installed"
 
@@ -133,14 +139,32 @@ line_of() {  # fixed-string -> first line number in $output
     [ "$(grep -c 'pacman -R nvidia-open' <<<"$output")" -eq 0 ]
 }
 
-@test "dry run without linux-cachyos-nvidia-open: note only, no removal, no mkinitcpio" {
+@test "C: only nvidia-open installed: removal before step 2, note still appears, drop-in and mkinitcpio still appear" {
     laptop_root
     printf 'linux\nnvidia-open\n' > "$WORK/installed"
 
     run dry_run_laptop
     [ "$status" -eq 0 ]
 
-    grep -qF 'linux-cachyos-nvidia-open is not installed yet: chwd installs it at step 4, and hwd then removes nvidia-open and writes the mkinitcpio drop-in.' <<<"$output"
+    grep -qF '+ pacman -R nvidia-open' <<<"$output"
+    grep -qF 'linux-cachyos-nvidia-open is not installed yet: chwd installs it at step 4, and hwd then writes the mkinitcpio drop-in.' <<<"$output"
+    grep -qF '+# Written by chiroptera-hwd' <<<"$output"
+    grep -qF '+ mkinitcpio -p linux' <<<"$output"
+
+    rm=$(line_of '+ pacman -R nvidia-open')
+    syyneeded=$(line_of '+ pacman -Syy --needed cachyos/pacman')
+    [ "$rm" -lt "$syyneeded" ]
+}
+
+@test "D: neither nvidia-open nor linux-cachyos-nvidia-open installed: note only, no removal, no drop-in, no mkinitcpio" {
+    laptop_root
+    printf 'linux\n' > "$WORK/installed"
+
+    run dry_run_laptop
+    [ "$status" -eq 0 ]
+
+    grep -qF 'linux-cachyos-nvidia-open is not installed yet: chwd installs it at step 4, and hwd then writes the mkinitcpio drop-in.' <<<"$output"
     [ "$(grep -c 'pacman -R nvidia-open' <<<"$output")" -eq 0 ]
+    [ "$(grep -c -- '+# Written by chiroptera-hwd' <<<"$output")" -eq 0 ]
     [ "$(grep -c 'mkinitcpio -p linux' <<<"$output")" -eq 0 ]
 }

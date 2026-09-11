@@ -265,6 +265,7 @@ ASSUME_YES=0
 STAMP=
 TMPD=
 CURRENT_STEP=
+REMOVED_NVIDIA_OPEN=0
 
 # Not named `run`: bats defines run(), and the tests source this file.
 runcmd() {
@@ -399,37 +400,51 @@ fi
 EOF
 }
 
-# Runs once CachyOS's prebuilt linux-cachyos-nvidia-open is installed (chwd
-# installs it at step 4): removes Arch's nvidia-open, which CachyOS's own
-# nvidia-open build can lag behind an Arch kernel bump, and writes the
-# drop-in so the fallback kernel never carries a stale NVIDIA module.
-# Idempotent: identical content and an already-removed package rerun no
-# mkinitcpio.
-step_fallback_nvidia() {
-    if ! installed_pkg linux-cachyos-nvidia-open; then
-        if (( DRY_RUN )); then
-            printf 'linux-cachyos-nvidia-open is not installed yet: chwd installs it at step 4, and hwd then removes nvidia-open and writes the mkinitcpio drop-in.\n'
-        fi
-        return
-    fi
-
-    local dropin=$HWD_ROOT/etc/mkinitcpio.conf.d/90-chiroptera-hwd.conf
-    local new=$TMPD/90-chiroptera-hwd.conf
-    nvidia_dropin > "$new"
-    local old=$dropin changed=0
-    if [[ ! -e $dropin ]]; then old=/dev/null; fi
-    if ! cmp -s "$old" "$new"; then changed=1; fi
-
-    runcmd mkdir -p "$HWD_ROOT/etc/mkinitcpio.conf.d"
-    replace_file "$dropin" "$new"
-
-    local removed=0
+# Removes Arch's nvidia-open before the upgrade transactions run: CachyOS can
+# move nvidia-utils (and opencl/lib32/settings) ahead of the version
+# nvidia-open pins -- observed 2026-09-11 with 615.71.09 vs 610.57.04 -- and
+# while nvidia-open stays installed, no pacman -Syu can satisfy both pins at
+# once. Sets REMOVED_NVIDIA_OPEN so step_fallback_nvidia still writes the
+# drop-in and rebuilds the fallback image even though
+# linux-cachyos-nvidia-open is not installed yet. Idempotent: an
+# already-removed package is a no-op.
+step_drop_stock_nvidia() {
     if installed_pkg nvidia-open; then
+        printf "nvidia-open pins nvidia-utils to its own version and would block the upgrade; the stock fallback runs without NVIDIA (see docs/hwd.md).\n"
         pac -R nvidia-open
-        removed=1
+        REMOVED_NVIDIA_OPEN=1
+    fi
+}
+
+# Runs once CachyOS's prebuilt linux-cachyos-nvidia-open is installed (chwd
+# installs it at step 4) or nvidia-open was removed earlier in this run by
+# step_drop_stock_nvidia: writes the drop-in so the fallback kernel never
+# carries a stale NVIDIA module, and rebuilds the fallback image when the
+# drop-in changed or nvidia-open was removed. No longer removes anything --
+# that now happens before the upgrade, in step_drop_stock_nvidia. Idempotent:
+# identical content and nothing removed this run trigger no mkinitcpio.
+step_fallback_nvidia() {
+    local cachyos_module_installed=0
+    if installed_pkg linux-cachyos-nvidia-open; then cachyos_module_installed=1; fi
+
+    if (( DRY_RUN )) && (( ! cachyos_module_installed )); then
+        printf 'linux-cachyos-nvidia-open is not installed yet: chwd installs it at step 4, and hwd then writes the mkinitcpio drop-in.\n'
     fi
 
-    if (( changed || removed )) && installed_pkg linux; then
+    local changed=0
+    if (( cachyos_module_installed || REMOVED_NVIDIA_OPEN )); then
+        local dropin=$HWD_ROOT/etc/mkinitcpio.conf.d/90-chiroptera-hwd.conf
+        local new=$TMPD/90-chiroptera-hwd.conf
+        nvidia_dropin > "$new"
+        local old=$dropin
+        if [[ ! -e $dropin ]]; then old=/dev/null; fi
+        if ! cmp -s "$old" "$new"; then changed=1; fi
+
+        runcmd mkdir -p "$HWD_ROOT/etc/mkinitcpio.conf.d"
+        replace_file "$dropin" "$new"
+    fi
+
+    if (( changed || REMOVED_NVIDIA_OPEN )) && installed_pkg linux; then
         runcmd mkinitcpio -p linux
     fi
 }
@@ -494,6 +509,10 @@ cmd_apply() {
     # Arch's pacman rejects x86_64_v3/v4 packages, so it cannot perform the
     # upgrade itself. The fork's own package is plain x86_64 and installs fine.
     step "2/5: CachyOS pacman, then the upgrade"
+    # nvidia-open pins nvidia-utils to its own version; if CachyOS has moved
+    # nvidia-utils ahead, that pin blocks -Syu for as long as nvidia-open
+    # stays installed. Drop it first, before either transaction below.
+    step_drop_stock_nvidia
     # -Syy forces a fresh sync of every database: the bootstrap step already
     # fetched cachyos.db from mirror.cachyos.org, and -Sy alone would trust
     # that copy instead of replacing it with what the real mirrorlist serves.
