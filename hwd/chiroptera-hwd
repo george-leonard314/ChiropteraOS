@@ -153,17 +153,26 @@ repo_block() {  # level
 }
 
 # Print pacman.conf with the level's sections inserted directly above [core]
-# and Architecture set to auto, which the CachyOS pacman needs to accept its
-# x86_64_v3/v4 packages. A [cachyos] section already present means a CachyOS
-# setup exists: the sections are then left exactly as they are, which is what
-# makes a second run a no-op. Exits 3 when there is no [core] to anchor on.
+# and Architecture set to auto (added if missing), which the CachyOS pacman
+# needs to accept its x86_64_v3/v4 packages. A [cachyos] section already
+# present means a CachyOS setup exists: the sections are then left exactly as
+# they are, which is what makes a second run a no-op. Exits 3 when there is
+# no [core] to anchor on.
 edit_pacman_conf() {  # level < pacman.conf
     HWD_BLOCK=$(repo_block "$1") awk '
-        /^Architecture[[:space:]]*=/ { $0 = "Architecture = auto" }
+        /^Architecture[[:space:]]*=/ { $0 = "Architecture = auto"; saw_arch = 1 }
         $0 == "[cachyos]" { present = 1 }
-        { lines[++n] = $0 }
+        {
+            if (/^\[options\]/) {
+                options_line = n + 1
+            }
+            lines[++n] = $0
+        }
         END {
             for (i = 1; i <= n; i++) {
+                if (i == options_line + 1 && !saw_arch && lines[i] !~ /^Architecture/) {
+                    print "Architecture = auto"
+                }
                 if (!present && !done && lines[i] == "[core]") {
                     print ENVIRON["HWD_BLOCK"]
                     print ""

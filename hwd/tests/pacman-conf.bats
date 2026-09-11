@@ -66,3 +66,12 @@ Include = /etc/pacman.d/cachyos-v4-mirrorlist
 [cachyos]
 Include = /etc/pacman.d/cachyos-mirrorlist" ]
 }
+
+@test "a file with no Architecture line gets one directly after [options]" {
+    run edit_pacman_conf v3 < "$CONF/no-arch.conf"
+    [ "$status" -eq 0 ]
+    [ "$(sed -n 2p <<<"$output")" = "Architecture = auto" ]
+    [ "$(grep -c '^Architecture' <<<"$output")" -eq 1 ]
+    second=$(edit_pacman_conf v3 <<<"$output")
+    [ "$output" = "$second" ]
+}
