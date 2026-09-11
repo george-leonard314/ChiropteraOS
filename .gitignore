@@ -17,3 +17,6 @@ pkgs/chiroptera-dots/chiroptera-dots/
 # Built repository (CI output; also written by ci/run-in-container.sh)
 /repo/
 pkgs/app2unit/app2unit-*.tgz
+
+# Agent worktrees (Claude Code); never commit them
+.claude/worktrees/
