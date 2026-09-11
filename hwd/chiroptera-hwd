@@ -184,6 +184,44 @@ edit_pacman_conf() {  # level < pacman.conf
         }'
 }
 
+# ---- boot entry --------------------------------------------------------------
+
+# GRUB_TOP_LEVEL (GRUB 2.12+) moves the named kernel to the top of the menu, so
+# GRUB_DEFAULT=0 now means linux-cachyos while stock linux stays listed below.
+edit_default_grub() {  # < /etc/default/grub
+    awk -v line='GRUB_TOP_LEVEL="/boot/vmlinuz-linux-cachyos"' '
+        /^#?GRUB_TOP_LEVEL=/ { if (!done) print line; done = 1; next }
+        { print }
+        END { if (!done) print line }'
+}
+
+# The stock kernel's normal entry, identified by its initramfs: the fallback
+# entry boots the same /vmlinuz-linux and must not be the one copied.
+stock_sdboot_entry() {  # esp
+    local entry
+    for entry in "$1"/loader/entries/*.conf; do
+        if grep -qsE '^initrd[[:space:]]+/initramfs-linux\.img$' "$entry"; then
+            echo "$entry"
+            return 0
+        fi
+    done
+    return 1
+}
+
+sdboot_entry_from() {  # < stock entry
+    sed -E \
+        -e 's|^title[[:space:]].*|title   ChiropteraOS (linux-cachyos)|' \
+        -e 's|^(linux[[:space:]]+)/vmlinuz-linux$|\1/vmlinuz-linux-cachyos|' \
+        -e 's|^(initrd[[:space:]]+)/initramfs-linux\.img$|\1/initramfs-linux-cachyos.img|'
+}
+
+edit_loader_conf() {  # < loader.conf
+    awk '
+        /^default[[:space:]]/ { if (!done) print "default linux-cachyos.conf"; done = 1; next }
+        { print }
+        END { if (!done) print "default linux-cachyos.conf" }'
+}
+
 json_array() {  # words...
     local out='' word
     for word in "$@"; do
