@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Install ChiropteraOS
+Comment=Install ChiropteraOS on this computer
+Exec=chiroptera-install
+Icon=/usr/share/calamares/branding/chiroptera/icon.png
+Terminal=false
+Categories=System;
+Keywords=install;installer;calamares;

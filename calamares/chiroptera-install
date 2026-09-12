@@ -1,0 +1,4 @@
+#!/bin/sh
+# Start the installer from the live session. Calamares needs root; -E keeps
+# the Wayland socket variables so it can draw on the live desktop.
+exec sudo -E env QT_QPA_PLATFORM='wayland;xcb' calamares -D6 "$@"

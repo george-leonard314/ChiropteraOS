@@ -1,0 +1,12 @@
+# Live session: log straight into Hyprland as the live user. After logout,
+# or on the installed system, the Noctalia greeter takes over.
+[terminal]
+vt = 1
+
+[default_session]
+command = "env NOCTALIA_GREETER_ASSETS_DIR=/usr/share/chiroptera/greeter/assets /usr/bin/noctalia-greeter-session"
+user = "greeter"
+
+[initial_session]
+command = "/usr/bin/start-hyprland"
+user = "live"

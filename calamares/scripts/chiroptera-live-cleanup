@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+# Runs inside the target chroot after unpackfs: undo everything that makes the
+# copied image a live session. Each line is independent; keep going on errors
+# so one missing file never aborts the install.
+exec 2>&1
+set -u
+
+# archiso's initramfs hooks and preset -> the stock linux preset.
+rm -f /etc/mkinitcpio.conf.d/archiso.conf
+cat > /etc/mkinitcpio.d/linux.preset <<'PRESET'
+# mkinitcpio preset file for the 'linux' package
+
+#ALL_config="/etc/mkinitcpio.conf"
+ALL_kver="/boot/vmlinuz-linux"
+
+PRESETS=('default' 'fallback')
+
+default_image="/boot/initramfs-linux.img"
+
+fallback_image="/boot/initramfs-linux-fallback.img"
+fallback_options="-S autodetect"
+PRESET
+
+# Live user, autologin and passwordless root.
+rm -f /etc/sysusers.d/chiroptera-live.conf /etc/tmpfiles.d/chiroptera-live.conf \
+      /etc/sudoers.d/10-live /etc/polkit-1/rules.d/49-live.rules
+rm -rf /etc/chiroptera-live
+cat > /etc/greetd/config.toml <<'GREETD'
+[terminal]
+vt = 1
+
+[default_session]
+command = "env NOCTALIA_GREETER_ASSETS_DIR=/usr/share/chiroptera/greeter/assets /usr/bin/noctalia-greeter-session"
+user = "greeter"
+GREETD
+
+# releng's live-medium tweaks: volatile journal, no suspend, tmpfs keyring,
+# no gpt-auto mounting.
+rm -f /etc/systemd/journald.conf.d/volatile-storage.conf \
+      /etc/systemd/logind.conf.d/do-not-suspend.conf \
+      /etc/systemd/resolved.conf.d/archiso.conf \
+      /etc/systemd/system/etc-pacman.d-gnupg.mount \
+      /etc/systemd/system/multi-user.target.wants/pacman-init.service \
+      /etc/systemd/system/pacman-init.service \
+      /etc/systemd/system-generators/systemd-gpt-auto-generator
+
+# Let the login unlock the GNOME keyring, so the first login does not ask the
+# new user to invent a keyring password. greetd owns this file, so append
+# rather than replace, and only once.
+if [[ -f /etc/pam.d/greetd ]] && ! grep -q pam_gnome_keyring /etc/pam.d/greetd; then
+    cat >> /etc/pam.d/greetd <<'PAM'
+
+auth       optional  pam_gnome_keyring.so
+session    optional  pam_gnome_keyring.so auto_start
+PAM
+fi
+
+# The live keyring lived on a tmpfs, so the target has none yet.
+pacman-key --init
+pacman-key --populate archlinux
+
+# Live-only packages. The installer goes last: this script belongs to it.
+pacman -Rns --noconfirm mkinitcpio-archiso || true
+pacman -Rns --noconfirm chiroptera-calamares-config calamares || true
+exit 0

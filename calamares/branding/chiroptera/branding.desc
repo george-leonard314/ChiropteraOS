@@ -1,0 +1,28 @@
+---
+componentName:  chiroptera
+welcomeStyleCalamares: false
+welcomeExpandingLogo:  true
+windowExpanding:  normal
+windowSize:       1100px,620px
+windowPlacement:  center
+sidebar:          widget
+navigation:       widget
+strings:
+    productName:         ChiropteraOS
+    shortProductName:    ChiropteraOS
+    version:             rolling
+    shortVersion:        rolling
+    versionedName:       ChiropteraOS
+    shortVersionedName:  ChiropteraOS
+    bootloaderEntryName: ChiropteraOS
+images:
+    productLogo:    "logo.png"
+    productIcon:    "icon.png"
+    productWelcome: "welcome.png"
+style:
+    SidebarBackground:        "#141414"
+    SidebarText:              "#E6E6E6"
+    SidebarTextCurrent:       "#141414"
+    SidebarBackgroundCurrent: "#FF1F8F"
+slideshow:    "show.qml"
+slideshowAPI: 2

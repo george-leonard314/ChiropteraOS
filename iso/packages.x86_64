@@ -1,0 +1,42 @@
+# Base system and boot
+base
+linux
+linux-firmware
+sof-firmware
+amd-ucode
+intel-ucode
+mkinitcpio
+mkinitcpio-archiso
+syslinux
+grub
+efibootmgr
+os-prober
+# Disks, for the installer
+dosfstools
+e2fsprogs
+btrfs-progs
+cryptsetup
+lvm2
+arch-install-scripts
+# Tools
+sudo
+nano
+networkmanager
+network-manager-applet
+# Graphics: the live session has to work on AMD, Intel and NVIDIA
+mesa
+vulkan-radeon
+vulkan-intel
+nvidia-open
+nvidia-utils
+qemu-guest-agent
+# Desktop
+greetd
+noctalia-greeter
+chiroptera-themes
+chiroptera-meta
+chiroptera-hwd
+# Installer
+calamares
+chiroptera-calamares-config
+qt6-wayland
