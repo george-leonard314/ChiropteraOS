@@ -4,11 +4,12 @@ pkgname=chiroptera-dots
 _srcname=chiroptera-dots
 pkgver=0.1.3
 _tag=v0.1.3
-pkgrel=1
+pkgrel=2
 pkgdesc='ChiropteraOS dotfiles: Hyprland, Chiroptera Shell, fish, foot, fastfetch'
 arch=('any')
 url='https://github.com/george-leonard314/chiroptera-dots'
 license=('GPL-3.0-only')
+makedepends=('librsvg')
 depends=('hyprland' 'chiroptera-shell' 'fish' 'foot' 'fastfetch' 'btop' 'starship')
 optdepends=('thunar: file manager used by the file-explorer keybind'
             'obsidian: notes, bound to the obsidian special workspace'
@@ -25,7 +26,7 @@ package() {
   install -dm755 "$pkgdir/usr/share/chiroptera/dots"
   cp -a config/. "$pkgdir/usr/share/chiroptera/dots/"
   # New users get it through /etc/skel.
-  install -dm755 "$pkgdir/etc/skel/.config"
+  install -dm755 "$pkgdir/etc/skel/.config" "$pkgdir/etc/skel/.local/share/chiroptera/branding"
   cp -a config/. "$pkgdir/etc/skel/.config/"
   # Files the repo keeps out of git as personal or generated, but which
   # hyprland.conf sources: give a fresh account working stand-ins. The shell
@@ -45,6 +46,15 @@ package() {
   install -m644 branding/*.svg "$pkgdir/usr/share/chiroptera/branding/"
   install -Dm644 branding/wallpapers/chiroptera-default.png \
     "$pkgdir/usr/share/backgrounds/chiroptera/chiroptera-default.png"
+  # fastfetch's logo is a template the shell re-renders for each palette; a
+  # fresh account has none yet, and fastfetch then falls back to Arch's ASCII
+  # art. Render the Chiroptera palette's version at build time so the logo is
+  # right from the first terminal.
+  sed -e 's|{{colors.primary.default.hex}}|#6778e4|' \
+      -e 's|{{colors.tertiary.default.hex}}|#be66cc|' \
+      config/chiroptera/templates/fastfetch-logo.svg >"$srcdir/fastfetch-logo.svg"
+  rsvg-convert -w 480 "$srcdir/fastfetch-logo.svg" \
+    -o "$pkgdir/etc/skel/.local/share/chiroptera/branding/fastfetch-logo.png"
   install -Dm755 bin/chiroptera-super-tap "$pkgdir/usr/bin/chiroptera-super-tap"
   install -Dm755 bin/chiroptera-toggle    "$pkgdir/usr/bin/chiroptera-toggle"
   install -Dm755 bin/chiroptera-apps      "$pkgdir/usr/bin/chiroptera-apps"
