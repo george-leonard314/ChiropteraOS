@@ -2,13 +2,13 @@
 
 pkgname=chiroptera-dots
 _srcname=chiroptera-dots
-pkgver=0.1.0
-_tag=v0.1.0
+pkgver=0.1.1
+_tag=v0.1.1
 pkgrel=1
 pkgdesc='ChiropteraOS dotfiles: Hyprland, Chiroptera Shell, fish, foot, fastfetch'
 arch=('any')
 url='https://github.com/george-leonard314/chiroptera-dots'
-license=('MIT')
+license=('GPL-3.0-only')
 depends=('hyprland' 'chiroptera-shell' 'fish' 'foot' 'fastfetch' 'btop' 'starship')
 optdepends=('thunar: file manager used by the file-explorer keybind'
             'obsidian: notes, bound to the obsidian special workspace'
@@ -27,12 +27,28 @@ package() {
   # New users get it through /etc/skel.
   install -dm755 "$pkgdir/etc/skel/.config"
   cp -a config/. "$pkgdir/etc/skel/.config/"
+  # Files the repo keeps out of git as personal or generated, but which
+  # hyprland.conf sources: give a fresh account working stand-ins. The shell
+  # regenerates scheme/current.conf from the wallpaper on first start.
+  local tree
+  for tree in "$pkgdir/usr/share/chiroptera/dots" "$pkgdir/etc/skel/.config"; do
+    [[ -e $tree/hypr/scheme/current.conf ]] \
+      || install -m644 "$tree/hypr/scheme/default.conf" "$tree/hypr/scheme/current.conf"
+    [[ -e $tree/hypr/monitors.conf ]] \
+      || printf '# Every monitor at its preferred mode; edit with nwg-displays.\nmonitor = , preferred, auto, 1\n' \
+         | install -m644 /dev/stdin "$tree/hypr/monitors.conf"
+    [[ -e $tree/hypr/hyprland/user.conf ]] \
+      || printf '# Personal Hyprland overrides; sourced last.\n' \
+         | install -m644 /dev/stdin "$tree/hypr/hyprland/user.conf"
+  done
   install -dm755 "$pkgdir/usr/share/chiroptera/branding"
   install -m644 branding/*.svg "$pkgdir/usr/share/chiroptera/branding/"
   install -Dm644 branding/wallpapers/chiroptera-default.png \
     "$pkgdir/usr/share/backgrounds/chiroptera/chiroptera-default.png"
   install -Dm755 bin/chiroptera-super-tap "$pkgdir/usr/bin/chiroptera-super-tap"
   install -Dm755 bin/chiroptera-toggle    "$pkgdir/usr/bin/chiroptera-toggle"
+  install -Dm755 bin/chiroptera-apps      "$pkgdir/usr/bin/chiroptera-apps"
+  install -Dm644 -t "$pkgdir/usr/share/chiroptera" packages/apps.txt packages/apps-blackarch.txt
   install -Dm755 install.sh               "$pkgdir/usr/bin/chiroptera-dots"
   install -Dm644 README.md  "$pkgdir/usr/share/doc/$pkgname/README.md"
   install -Dm644 CREDITS.md "$pkgdir/usr/share/doc/$pkgname/CREDITS.md"

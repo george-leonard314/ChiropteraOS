@@ -28,8 +28,8 @@ suite and a real apply in a container run in CI. See `docs/hwd.md`.
 |---|---|
 | 3 | Theme, logo and bar composition — largely done during step 2 |
 | 4 | Publishing: choose a host and wire up the `publish` job (build CI is done) |
-| 5 | `chiroptera-hwd` is built and tested; applying it to the laptop awaits the author's review of the dry run |
-| 6 | The ISO: archiso profile, live desktop, Calamares |
+| 5 | Applied to the laptop; after-benchmarks wait on the flaky-TSC fix (`tsc=reliable`) |
+| 6 | The ISO builds (`iso/`, `calamares/`, `ci/build-iso.sh`; see `docs/iso.md`); VM install test and a CI job remain |
 | 7 | The AI sidebar plugin |
 | 8 | Upstream sync tooling and the greeter rebrand |
 
@@ -45,9 +45,8 @@ see `docs/repository.md`. Step 5 can proceed in parallel.
   content. CI clones fresh each run and so cannot hit this, but its skip logic
   keys on `pkgver-pkgrel`: after moving a tag, bump `pkgrel` or dispatch the
   workflow with `force_rebuild`.
-- **Where to publish the repository is undecided.** GitHub Pages publishes from
-  a private repository only on a paid plan, and all three repositories are
-  private. See `docs/repository.md`.
+- **Where to publish the repository is undecided.** All three repositories are
+  public now, so GitHub Pages is free. See `docs/repository.md`.
 
 ### Resolved in step 4
 

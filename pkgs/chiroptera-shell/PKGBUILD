@@ -3,8 +3,8 @@
 
 pkgname=chiroptera-shell
 _srcname=chiroptera-shell
-pkgver=5.0.1.chiroptera2
-_tag=v5.0.1-chiroptera2
+pkgver=5.0.1.chiroptera3
+_tag=v5.0.1-chiroptera3
 pkgrel=1
 pkgdesc='Chiroptera Shell: the ChiropteraOS Wayland desktop shell (rebrand of Noctalia)'
 arch=('x86_64' 'aarch64')
