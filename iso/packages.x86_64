@@ -34,6 +34,22 @@ qemu-guest-agent
 # 800x600 or 1024x768 without. The kernel's own vboxguest/vboxsf modules do
 # the rest. Harmless on real hardware: the service exits when not in a VM.
 virtualbox-guest-utils
+# DisplayLink docks. evdi is the kernel module the DisplayLink Manager daemon
+# renders through; without it a dock's screens simply never appear. Both are
+# vendored from the AUR into pkgs/ -- see docs/repository.md. displaylink is
+# proprietary (Synaptics EULA) and is the one non-free package in the image.
+#
+# evdi is a DKMS module, so dkms and linux-headers have to be here too: the
+# module is compiled during the image build, against the `linux` above. That
+# costs roughly 600 MB uncompressed (linux-headers 318 MB, gcc 232 MB,
+# binutils 45 MB), which zstd squashes down considerably in the squashfs. It
+# is worth it because the installer copies this filesystem to disk with
+# unpackfs, so DKMS is also what rebuilds evdi on the installed system after
+# the user's first kernel update. A prebuilt .ko would die at that point.
+evdi-dkms
+displaylink
+dkms
+linux-headers
 # Desktop
 greetd
 noctalia-greeter

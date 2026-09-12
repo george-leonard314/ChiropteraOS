@@ -6,17 +6,35 @@ it, and the two things still owed before it can be published.
 
 ## What it carries
 
-Four packages — the three ChiropteraOS ones plus `app2unit`, which is the only
-dependency of `chiroptera-meta` that exists in neither `core` nor `extra`. An
-AUR-only dependency cannot be resolved by `pacman`, so the repository has to
-carry it.
+The ChiropteraOS packages, plus the AUR packages they and the live image
+depend on. An AUR-only dependency cannot be resolved by `pacman`, so the
+repository has to carry it.
 
 | Package | Arch | Source |
 |---|---|---|
 | `app2unit` | any | Public GitHub tarball, vendored from the AUR |
+| `evdi-dkms` | x86_64 | Public GitHub tarball, vendored from the AUR |
+| `displaylink` | x86_64 | Synaptics download, vendored from the AUR — **proprietary** |
 | `chiroptera-shell` | x86_64 | Private repository, tag `v5.0.1-chiroptera1` |
 | `chiroptera-dots` | any | Private repository, tag `v0.1.0` |
 | `chiroptera-meta` | any | This repository |
+| `chiroptera-hwd` | any | This repository |
+| `chiroptera-themes` | any | This repository |
+| `chiroptera-calamares-config` | any | This repository |
+
+`evdi-dkms` and `displaylink` are what make DisplayLink docks work; the image
+installs both. Two things about them are unlike the rest:
+
+- `displaylink` is **not free software**. The DisplayLinkManager binary is
+  Synaptics', under the EULA installed to
+  `/usr/share/licenses/displaylink/DISPLAYLINK-EULA`. Publishing the repository
+  and the image redistributes it. That is a deliberate choice, taken so docks
+  work out of the box; revisit it before any wider release.
+- Its source zip is fetched from `synaptics.com` at build time and Synaptics
+  retires old versions from that path, so this package will eventually fail to
+  build with a 404. The fix is to bump `pkgver`, `_releasedate`, `_pkgfullver`
+  and the first `sha256sums` entry to the current release. `displaylink`
+  requires `evdi<1.16`, so check that constraint when bumping either.
 
 x86_64 only. The `aarch64` line in the shell PKGBUILD is inherited from
 upstream Noctalia and is not built or tested.

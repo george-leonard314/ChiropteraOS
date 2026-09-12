@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# Start the live Hyprland session, telling Hyprland which DRM devices to render
+# on and leaving DisplayLink's virtual cards out of that list.
+#
+# evdi -- the kernel module DisplayLink docks render through -- registers
+# /dev/dri/card* nodes that cannot render anything themselves. With
+# AQ_DRM_DEVICES unset, aquamarine enumerates every card node it can see,
+# including those, and can end up with a non-rendering one as the primary
+# device: nothing is ever scanned out, every output stays black, and switching
+# VT does not recover it either.
+#
+# Diagnosed on mainLaptop, 2026-09-12. A session that happened to start before
+# the dock's second evdi card appeared ran for three and a half hours; every
+# session that started with both evdi cards already present went black within
+# seconds. Since this image now ships DisplayLink, the live session would hit
+# that race on any machine with a dock attached at boot.
+#
+# Listing only the real GPUs is equivalent to the automatic behaviour minus the
+# evdi nodes. DisplayLink screens still work: they arrive through
+# DisplayLinkManager, not by Hyprland opening the evdi card directly.
+
+set -uo pipefail
+
+devices=()
+for card in /sys/class/drm/card*; do
+    name=${card##*/}
+    # /sys/class/drm also holds one entry per connector (card0-DP-1 and such).
+    # Only the bare card nodes are DRM devices.
+    [[ $name =~ ^card[0-9]+$ ]] || continue
+    [[ -e $card/device/driver ]] || continue
+
+    driver=$(basename "$(readlink -f "$card/device/driver")")
+    case $driver in
+        evdi | udl | udlfb) continue ;;
+    esac
+
+    devices+=("/dev/dri/$name")
+done
+
+# No real GPU found is not a case worth guessing about -- fall back to letting
+# Hyprland choose, which is what happens without this variable.
+if ((${#devices[@]} > 0)); then
+    AQ_DRM_DEVICES=$(
+        IFS=:
+        printf '%s' "${devices[*]}"
+    )
+    export AQ_DRM_DEVICES
+fi
+
+exec /usr/bin/start-hyprland "$@"

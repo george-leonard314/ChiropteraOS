@@ -23,4 +23,5 @@ file_permissions=(
   ["/etc/polkit-1/rules.d"]="0:102:750"
   ["/root"]="0:0:750"
   ["/root/.gnupg"]="0:0:700"
+  ["/usr/local/bin/chiroptera-live-session"]="0:0:755"
 )

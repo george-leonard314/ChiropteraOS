@@ -8,5 +8,9 @@ command = "env NOCTALIA_GREETER_ASSETS_DIR=/usr/share/chiroptera/greeter/assets 
 user = "greeter"
 
 [initial_session]
-command = "/usr/bin/start-hyprland"
+# Not start-hyprland directly: the wrapper works out which DRM devices to
+# render on and keeps DisplayLink's evdi cards out of that list, which would
+# otherwise leave every output black on a machine with a dock attached at boot.
+# See the comment in the script itself.
+command = "/usr/local/bin/chiroptera-live-session"
 user = "live"

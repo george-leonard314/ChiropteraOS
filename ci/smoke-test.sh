@@ -78,4 +78,19 @@ fi
 grep -q "/chiroptera-hwd-" <<<"$resolution" \
     || fail "chiroptera-hwd was not served by the built repository"
 
-echo "ok: $TARGET and chiroptera-hwd resolve against the built repository"
+# The live image installs displaylink, whose only dependency that pacman cannot
+# otherwise reach is evdi. Both are AUR packages this repository vendors, and
+# displaylink pins evdi<1.16 -- exactly the shape of dependency that made
+# chiroptera-meta uninstallable before app2unit was carried here. Resolve it so
+# a version bump that breaks the pin fails the build rather than the ISO.
+echo "resolving displaylink"
+if ! resolution=$(pac -Sp --noconfirm displaylink 2>&1); then
+    printf '%s\n' "$resolution" >&2
+    fail "displaylink does not resolve; check the evdi<1.16 pin against evdi-dkms"
+fi
+for required in displaylink evdi-dkms; do
+    grep -q "/$required-" <<<"$resolution" \
+        || fail "$required was not served by the built repository"
+done
+
+echo "ok: $TARGET, chiroptera-hwd and displaylink resolve against the built repository"
