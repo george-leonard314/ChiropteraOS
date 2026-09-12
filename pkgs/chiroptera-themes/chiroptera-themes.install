@@ -1,0 +1,26 @@
+# Seed the greeter's state on first install. Never overwrite: the shell's
+# Sync writes sync.toml, and greeter.toml is the administrator's to edit.
+#
+# World-readable on purpose: the greeter runs as the unprivileged greetd
+# user, and that account does not always exist yet when this package is
+# installed (in an ISO build it is created by greetd's sysusers later).
+_seed() {
+  local dir=/var/lib/noctalia-greeter f
+  install -dm755 "$dir"
+  for f in sync.toml greeter.toml; do
+    [[ -e $dir/$f ]] || install -m644 "/usr/share/chiroptera/greeter/$f" "$dir/$f"
+  done
+  if getent passwd greeter >/dev/null; then
+    chown greeter:greeter "$dir" "$dir"/*.toml 2>/dev/null
+  fi
+}
+
+post_install() {
+  _seed
+  echo '==> greetd should run: env NOCTALIA_GREETER_ASSETS_DIR=/usr/share/chiroptera/greeter/assets /usr/bin/noctalia-greeter-session'
+  echo '==> GRUB theme: GRUB_THEME="/usr/share/grub/themes/darkmatter/theme.txt" in /etc/default/grub'
+}
+
+post_upgrade() {
+  _seed
+}
