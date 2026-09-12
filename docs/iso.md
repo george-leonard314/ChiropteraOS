@@ -55,16 +55,16 @@ now unmounts everything under the work directory first and deletes with
   GRUB path is the one proven on real hardware. The ESP is `/boot/efi`, and
   LUKS is version 1 because GRUB must unlock `/boot` and cannot open LUKS2's
   argon2 keyslots.
-- **One tick box installs the app list.** The installer's "Extra apps" page
-  (`netinstall`, off by default) holds a single group: the repository half of
-  `chiroptera-dots`' `packages/apps.txt`, mirrored into
-  `calamares/chiroptera-netinstall.yaml` (keep the two in step). Its
-  `packages` job runs after `chiroptera-hwd`, when the CachyOS repositories
-  exist. AUR apps cannot be installed from there.
-- **The rest of your apps come after first boot.** The image carries only the desktop
-  (`chiroptera-meta`). `chiroptera-apps`, from `chiroptera-dots`, installs
-  the author's list (`packages/apps.txt` in that repo: Arch, CachyOS and AUR
-  packages through paru; BlackArch ones only when that repository is set up).
+- **One tick box installs the extra apps.** The installer's "Extra apps" page
+  (`netinstall`, ticked by default) holds seven packages, listed in
+  `calamares/chiroptera-netinstall.yaml`: Brave, VSCodium, OnlyOffice, GIMP,
+  Obsidian, and `base-devel` plus `paru` so the AUR works. Its `packages` job
+  runs after `chiroptera-hwd`, when the CachyOS repositories those come from
+  exist. AUR-only apps cannot be installed from there.
+- **The desktop is in the image** (`chiroptera-meta`): the shell, the
+  dotfiles, Thunar with archive, thumbnail, trash and mounting support,
+  nwg-displays and nano among them. `chiroptera-apps`, from `chiroptera-dots`,
+  installs what no repository carries (SiYuan) after first boot.
 - **Login:** greetd. The live image logs straight into `start-hyprland`;
   installed systems get `noctalia-greeter`, branded by `chiroptera-themes`.
 
