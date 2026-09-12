@@ -39,6 +39,13 @@ now unmounts everything under the work directory first and deletes with
   ships no configs, `calamares/modules/` carries every module config the
   sequence needs (the plain-named ones are copied from CachyOS). `nvidia-open` is included so NVIDIA machines
   get a working live session.
+- **DisplayLink docks work in the live session.** `evdi-dkms` and
+  `displaylink` are vendored from the AUR into `pkgs/` (see
+  `docs/repository.md`; `displaylink` is proprietary). evdi is a DKMS module,
+  so `dkms` and `linux-headers` ship too and the module is compiled during the
+  image build -- about 600 MB uncompressed, which the squashfs absorbs. Since
+  the install is a copy of this filesystem, DKMS is also what rebuilds evdi on
+  the installed system after the user's first kernel update.
 - **The install is offline.** Calamares copies the live squashfs to the
   disk (`unpackfs`), then `chiroptera-live-cleanup` strips everything that
   made it a live session: archiso's initramfs hooks, the `live` user,
@@ -62,22 +69,33 @@ now unmounts everything under the work directory first and deletes with
   apps box, covers the AUR. Each step is skipped without the internet and can
   be re-run by hand afterwards.
 - **One tick box installs the extra apps.** The installer's "Extra apps" page
-  (`netinstall`, ticked by default) holds seven packages, listed in
+  (`netinstall`, ticked by default) holds six packages, listed in
   `calamares/chiroptera-netinstall.yaml`: Brave, VSCodium, OnlyOffice, GIMP,
-  Obsidian, and `base-devel` plus `paru` so the AUR works. Its `packages` job
+  and `base-devel` plus `paru` so the AUR works. Its `packages` job
   runs after `chiroptera-hwd`, when the CachyOS repositories those come from
   exist. AUR-only apps cannot be installed from there.
 - **The desktop is in the image** (`chiroptera-meta`): the shell, the
   dotfiles, Thunar with archive, thumbnail, trash and mounting support,
-  nwg-displays and nano among them. `chiroptera-apps`, from `chiroptera-dots`,
-  installs what no repository carries (SiYuan) after first boot.
+  nwg-displays and nano among them, and KMG for notes (`pkgs/kmg`, a rebrand
+  of SiYuan built on the system Electron). `chiroptera-apps`, from
+  `chiroptera-dots`, installs what no repository carries after first boot.
 - **The installer opens by itself.** The live user's Hyprland overrides file
   is a symlink to `/etc/chiroptera-live/user.conf`, which execs
   `chiroptera-install` a few seconds after the desktop appears. It is also in
   the launcher as "Install ChiropteraOS", and `chiroptera-install` works from
   a terminal.
-- **Login:** greetd. The live image logs straight into `start-hyprland`;
-  installed systems get `noctalia-greeter`, branded by `chiroptera-themes`.
+- **Login:** greetd. The live image logs straight into
+  `/usr/local/bin/chiroptera-live-session`, a wrapper that sets
+  `AQ_DRM_DEVICES` to the real GPUs and leaves DisplayLink's evdi cards out of
+  it. Without that, a machine with a dock attached at boot can have Hyprland
+  pick a non-rendering evdi node as its primary device and show nothing at all
+  on any output, with VT switching dead too. Installed systems get
+  `noctalia-greeter`, branded by `chiroptera-themes`.
+
+  The wrapper is live-only: `chiroptera-live-cleanup` rewrites
+  `/etc/greetd/config.toml` on the target, so an installed machine starts
+  Hyprland through the greeter without it. The same guard belongs in
+  `chiroptera-dots` (`hypr/hyprland/env.conf`) and is still owed.
 
 ## Look: `chiroptera-themes`
 
@@ -111,7 +129,7 @@ Defaults chosen without the author's input, all easy to change:
 | Swap | none or a swap file |
 | User | shell fish; groups wheel, audio, video, input, storage; root password reused |
 | Hostname | `chiroptera` |
-| Services | NetworkManager, systemd-resolved, greetd, bluetooth, timesyncd, fstrim |
+| Services | NetworkManager, systemd-resolved, greetd, bluetooth, timesyncd, fstrim, displaylink |
 | Finish | "Restart now" ticked |
 
 ## Verified in QEMU

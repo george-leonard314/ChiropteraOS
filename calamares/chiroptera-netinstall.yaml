@@ -1,10 +1,9 @@
 # The installer's "Extra apps" page. Ticked by default: these are the apps
 # George wants on a fresh machine that are too big for the image itself.
 # They come from the CachyOS repositories, which is why the packages job runs
-# after chiroptera-hwd. AUR-only apps (SiYuan) cannot be installed from here;
-# `chiroptera-apps` handles those after first boot.
+# after chiroptera-hwd. Notes (KMG) come with the image through chiroptera-meta.
 - name: "Apps"
-  description: "Brave, VSCodium, OnlyOffice, GIMP and Obsidian, plus paru so the AUR works. About 3 GB; needs the internet."
+  description: "Brave, VSCodium, OnlyOffice and GIMP, plus paru so the AUR works. About 3 GB; needs the internet."
   selected: true
   hidden: false
   critical: false
@@ -16,4 +15,3 @@
     - vscodium
     - onlyoffice-bin
     - gimp
-    - obsidian

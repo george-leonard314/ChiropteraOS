@@ -17,12 +17,14 @@ FORCE_REBUILD=${FORCE_REBUILD:-0}
 
 # Dependencies before dependents. Overridable so a local run can exercise the
 # script without recompiling the shell.
-read -r -a packages <<<"${PACKAGES:-app2unit chiroptera-shell chiroptera-dots chiroptera-meta chiroptera-hwd chiroptera-themes chiroptera-calamares-config}"
+read -r -a packages <<<"${PACKAGES:-app2unit evdi-dkms displaylink chiroptera-shell chiroptera-dots chiroptera-meta chiroptera-hwd chiroptera-themes chiroptera-calamares-config kmg}"
 
 # Dependency handling, per package:
 #
-#   --syncdeps  chiroptera-shell compiles; app2unit renders man pages with
-#               scdoc. Both genuinely need their makedepends installed.
+#   --syncdeps  chiroptera-shell and kmg compile; app2unit renders man pages with
+#               scdoc; evdi-dkms builds its library and pyevdi bindings. All
+#               genuinely need their makedepends installed.
+#
 #   --nodeps    chiroptera-dots, chiroptera-meta, chiroptera-hwd,
 #               chiroptera-themes and
 #               chiroptera-calamares-config have no
@@ -30,14 +32,25 @@ read -r -a packages <<<"${PACKAGES:-app2unit chiroptera-shell chiroptera-dots ch
 #               Installing their runtime dependencies would pull hundreds of
 #               megabytes into the builder and prove nothing about whether the
 #               published repository resolves. smoke-test.sh proves that.
+#
+#               displaylink is --nodeps for a different reason: it does have a
+#               prepare() step, but its depends are evdi<1.16 and libusb, and
+#               evdi lives only in this repository, which is not in the
+#               builder's pacman.conf -- --syncdeps would fail to resolve it.
+#               Nothing in prepare() needs evdi. Its declared makedepends are
+#               grep, gawk and wget; the makeself installer only calls awk,
+#               which base-devel already provides.
 declare -A extra_flags=(
     [app2unit]="--syncdeps"
+    [evdi-dkms]="--syncdeps"
+    [displaylink]="--nodeps"
     [chiroptera-shell]="--syncdeps"
     [chiroptera-dots]="--nodeps"
     [chiroptera-meta]="--nodeps"
     [chiroptera-hwd]="--nodeps"
     [chiroptera-themes]="--nodeps"
     [chiroptera-calamares-config]="--nodeps"
+    [kmg]="--syncdeps"
 )
 
 mkdir -p "$REPO_DIR"

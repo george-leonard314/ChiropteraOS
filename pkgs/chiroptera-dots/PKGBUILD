@@ -2,17 +2,20 @@
 
 pkgname=chiroptera-dots
 _srcname=chiroptera-dots
-pkgver=0.1.4
-_tag=v0.1.4
+pkgver=0.1.5
+_tag=v0.1.5
 pkgrel=1
 pkgdesc='ChiropteraOS dotfiles: Hyprland, Chiroptera Shell, fish, foot, fastfetch'
 arch=('any')
 url='https://github.com/george-leonard314/chiroptera-dots'
 license=('GPL-3.0-only')
 makedepends=('librsvg')
-depends=('hyprland' 'chiroptera-shell' 'fish' 'foot' 'fastfetch' 'btop' 'starship')
+# imagemagick: fastfetch renders the Sixel logo through it; without it every
+# terminal shows Arch's ASCII art instead.
+depends=('hyprland' 'chiroptera-shell' 'fish' 'foot' 'fastfetch' 'btop' 'starship'
+         'imagemagick')
 optdepends=('thunar: file manager used by the file-explorer keybind'
-            'obsidian: notes, bound to the obsidian special workspace'
+            'kmg: notes, bound to the notes special workspace'
             'superproductivity: todo, bound to the todo special workspace')
 provides=('chiroptera-dots')
 # Override with a local clone for development builds, e.g. file:///home/g/git/chiroptera-dots
@@ -44,6 +47,11 @@ package() {
   done
   install -dm755 "$pkgdir/usr/share/chiroptera/branding"
   install -m644 branding/*.svg "$pkgdir/usr/share/chiroptera/branding/"
+  # config.toml points the control-center button at
+  # ~/.local/share/chiroptera/branding/chiroptera-bat-icon.svg. The dev
+  # installer copies the marks there; a fresh account needs the same copies or
+  # the bar shows the shell's default glyph instead of the bat.
+  install -m644 branding/*.svg "$pkgdir/etc/skel/.local/share/chiroptera/branding/"
   install -Dm644 branding/wallpapers/chiroptera-default.png \
     "$pkgdir/usr/share/backgrounds/chiroptera/chiroptera-default.png"
   # fastfetch's logo is a template the shell re-renders for each palette; a
