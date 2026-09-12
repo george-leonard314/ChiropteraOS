@@ -1,7 +1,7 @@
 # Maintainer: George (ChiropteraOS)
 
 pkgname=chiroptera-meta
-pkgver=0.1.0
+pkgver=0.1.1
 pkgrel=1
 pkgdesc='Everything a ChiropteraOS desktop needs'
 arch=('any')
@@ -22,6 +22,11 @@ depends=(
   'app2unit' 'ydotool' 'qps' 'pavucontrol'
   # Audio, network, bluetooth
   'pipewire' 'pipewire-pulse' 'pipewire-alsa' 'wireplumber' 'networkmanager' 'bluez' 'bluez-utils'
+  # File manager and the pieces that make it useful: archives, thumbnails,
+  # trash and mounting. Thunar's terminal is set to foot in chiroptera-dots.
+  'thunar' 'thunar-archive-plugin' 'file-roller' 'tumbler' 'gvfs' 'gvfs-mtp'
+  # Monitor layout editor, and an editor that is always there
+  'nwg-displays' 'nano'
   # Look and feel
   # Repo names, not the AUR -kde variants: those provide these, so both satisfy it.
   'adw-gtk-theme' 'papirus-icon-theme' 'qt5ct' 'qt6ct'
@@ -32,10 +37,8 @@ depends=(
 )
 # firefox and code are deliberately not declared: no profile or configuration
 # is invested in either, so they are not part of the ChiropteraOS package set.
-optdepends=('thunar: file manager'
-            'obsidian: notes'
+optdepends=('obsidian: notes'
             'superproductivity: todo'
             'noctalia-greeter: greetd login screen themed by the shell'
-            'nwg-displays: monitor layout editor'
 )
 provides=('chiroptera-meta')

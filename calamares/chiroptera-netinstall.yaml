@@ -1,139 +1,19 @@
-# The installer's "Extra apps" page: one group, the repository half of
-# chiroptera-dots' packages/apps.txt. Keep the two in step when that list
-# changes. AUR apps (and the BlackArch list) cannot be installed from here;
+# The installer's "Extra apps" page. Ticked by default: these are the apps
+# George wants on a fresh machine that are too big for the image itself.
+# They come from the CachyOS repositories, which is why the packages job runs
+# after chiroptera-hwd. AUR-only apps (SiYuan) cannot be installed from here;
 # `chiroptera-apps` handles those after first boot.
-#
-# The packages job runs after chiroptera-hwd, so the CachyOS repositories
-# these come from already exist on the target.
-- name: "George's apps"
-  description: "Everything on the ChiropteraOS app list that comes from a repository: browsers, office, media, development and virtualisation. Needs the internet, and adds a few gigabytes to the install."
-  selected: false
+- name: "Apps"
+  description: "Brave, VSCodium, OnlyOffice, GIMP and Obsidian, plus paru so the AUR works. About 3 GB; needs the internet."
+  selected: true
   hidden: false
   critical: false
-  expanded: false
+  expanded: true
   packages:
-    - android-tools
-    - aria2
-    - aws-cli-v2
     - base-devel
-    - bind
-    - bluez-qt
-    - brave-bin
-    - cachyos-ananicy-rules
-    - cava
-    - cups
-    - curl-impersonate
-    - dhclient
-    - djvulibre
-    - docker
-    - docker-compose
-    - drawio-desktop
-    - erofs-utils
-    - exfatprogs
-    - exploitdb
-    - file-roller
-    - firefox
-    - freerdp
-    - gemini-cli
-    - gimp
-    - git-filter-repo
-    - github-cli
-    - gobuster
-    - gst-libav
-    - gst-plugins-bad
-    - gst-plugin-va
-    - gvfs
-    - gvfs-mtp
-    - hashcat
-    - hydra
-    - imagemagick
-    - iwd
-    - jdk21-openjdk
-    - jre-openjdk
-    - kdenlive
-    - kitty
-    - kubectl
-    - lib32-nvidia-utils
-    - lib32-opencl-nvidia
-    - lib32-vulkan-radeon
-    - libva-nvidia-driver
-    - libxml2-legacy
-    - linux-cachyos-headers
-    - linux-headers
-    - man-db
-    - man-pages
-    - mariadb
-    - metasploit
-    - mpv
-    - neovim
-    - net-tools
-    - newsboat
-    - nmap
-    - nodejs
-    - noto-fonts-extra
-    - npm
-    - nvidia-prime
-    - nvidia-settings
-    - nwg-displays
-    - obsidian
-    - obs-studio
-    - ollama
-    - onlyoffice-bin
-    - opencl-nvidia
-    - openvpn
-    - pacman-contrib
-    - pandoc-cli
     - paru
-    - php
-    - python-pip
-    - qbittorrent
-    - qt5-multimedia
-    - qt6-multimedia
-    - rpi-imager
-    - sane
-    - sane-airscan
-    - scx-scheds
-    - scx-tools
-    - signal-desktop
-    - simple-scan
-    - sl
-    - spotify-launcher
-    - sqlmap
-    - sshpass
-    - steam
-    - switcheroo-control
-    - syncthing
-    - system-config-printer
-    - systemd-resolvconf
-    - tailscale
-    - tea
-    - telegram-desktop
-    - terraform
-    - texlive-basic
-    - texlive-bibtexextra
-    - texlive-fontsrecommended
-    - texlive-latex
-    - texlive-latexextra
-    - texlive-latexrecommended
-    - texlive-xetex
-    - thunar
-    - thunar-archive-plugin
-    - thunderbird
-    - tigervnc
-    - tmux
-    - tor
-    - torsocks
-    - tree
-    - tty-solitaire
-    - tumbler
-    - v4l2loopback-dkms
-    - vim
-    - virtualbox
-    - virtualbox-host-dkms
-    - wget
-    - wine
-    - wireguard-tools
-    - xf86-video-amdgpu
-    - xfsprogs
-    - xorg-xhost
-    - zen-browser-bin
+    - brave-bin
+    - vscodium
+    - onlyoffice-bin
+    - gimp
+    - obsidian
