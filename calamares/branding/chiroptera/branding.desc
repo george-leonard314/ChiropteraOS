@@ -2,7 +2,7 @@
 componentName:  chiroptera
 welcomeStyleCalamares: false
 welcomeExpandingLogo:  true
-windowExpanding:  normal
+windowExpanding:  fullscreen
 windowSize:       1000px,560px
 windowPlacement:  center
 sidebar:          widget
