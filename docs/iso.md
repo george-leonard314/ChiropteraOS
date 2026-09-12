@@ -71,6 +71,11 @@ now unmounts everything under the work directory first and deletes with
   dotfiles, Thunar with archive, thumbnail, trash and mounting support,
   nwg-displays and nano among them. `chiroptera-apps`, from `chiroptera-dots`,
   installs what no repository carries (SiYuan) after first boot.
+- **The installer opens by itself.** The live user's Hyprland overrides file
+  is a symlink to `/etc/chiroptera-live/user.conf`, which execs
+  `chiroptera-install` a few seconds after the desktop appears. It is also in
+  the launcher as "Install ChiropteraOS", and `chiroptera-install` works from
+  a terminal.
 - **Login:** greetd. The live image logs straight into `start-hyprland`;
   installed systems get `noctalia-greeter`, branded by `chiroptera-themes`.
 
