@@ -131,6 +131,15 @@ the created user. What that run exposed, all fixed here:
   that QEMU run it did exactly that, the step was ignored as designed, and
   the install finished on stock Arch.
 
+## Testing it in a virtual machine
+
+QEMU with OVMF is what the install above was verified on. In VirtualBox the
+image boots too, but **set Graphics Controller to VBoxSVGA**: with VMSVGA the
+guest kernel logs `vmwgfx ... running on an unsupported hypervisor` and the
+live session never draws, leaving a black screen. Enable EFI, give it 6 GB,
+4 CPUs, a 40 GB disk and NAT networking (the CachyOS, BlackArch and app steps
+all need the internet).
+
 ## Not done yet
 
 - A CI job that builds the ISO and boots it in QEMU.
