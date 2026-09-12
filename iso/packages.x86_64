@@ -30,6 +30,10 @@ vulkan-intel
 nvidia-open
 nvidia-utils
 qemu-guest-agent
+# VirtualBox: lets the host resize the guest screen, which VMs default to
+# 800x600 or 1024x768 without. The kernel's own vboxguest/vboxsf modules do
+# the rest. Harmless on real hardware: the service exits when not in a VM.
+virtualbox-guest-utils
 # Desktop
 greetd
 noctalia-greeter
