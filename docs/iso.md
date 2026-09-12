@@ -55,6 +55,12 @@ now unmounts everything under the work directory first and deletes with
   GRUB path is the one proven on real hardware. The ESP is `/boot/efi`, and
   LUKS is version 1 because GRUB must unlock `/boot` and cannot open LUKS2's
   argon2 keyslots.
+- **All three package sources are set up by the install.** Arch (with
+  multilib) comes from the image's `pacman.conf`, CachyOS from
+  `chiroptera-hwd`, and BlackArch from `chiroptera-blackarch`, which
+  bootstraps that keyring over HTTPS and adds the repository. `paru`, in the
+  apps box, covers the AUR. Each step is skipped without the internet and can
+  be re-run by hand afterwards.
 - **One tick box installs the extra apps.** The installer's "Extra apps" page
   (`netinstall`, ticked by default) holds seven packages, listed in
   `calamares/chiroptera-netinstall.yaml`: Brave, VSCodium, OnlyOffice, GIMP,
