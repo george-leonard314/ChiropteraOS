@@ -1,0 +1,6 @@
+# Found through modules-search in settings.conf.
+---
+type:       "job"
+name:       "chiroptera-netcheck"
+interface:  "python"
+script:     "main.py"

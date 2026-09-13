@@ -1,7 +1,7 @@
 # Maintainer: George (ChiropteraOS)
 
 pkgname=chiroptera-calamares-config
-pkgver=0.1.0
+pkgver=0.1.1
 pkgrel=1
 pkgdesc='ChiropteraOS installer: Calamares settings, modules and branding'
 arch=('any')
@@ -19,6 +19,11 @@ package() {
   install -Dm644 "$src/chiroptera-netinstall.yaml" "$pkgdir/etc/calamares/chiroptera-netinstall.yaml"
   install -Dm644 -t "$pkgdir/etc/calamares/modules" "$src"/modules/*.conf
   install -Dm755 -t "$pkgdir/etc/calamares/scripts" "$src"/scripts/*
+  # Our own job modules; settings.conf lists this directory in modules-search.
+  local mod
+  for mod in "$src"/job-modules/*/; do
+    install -Dm644 -t "$pkgdir/usr/share/chiroptera/calamares/modules/$(basename "$mod")" "$mod"/*
+  done
   install -Dm644 -t "$pkgdir/usr/share/calamares/branding/chiroptera" "$src"/branding/chiroptera/*
   install -Dm755 "$src/chiroptera-install" "$pkgdir/usr/bin/chiroptera-install"
   install -Dm644 "$src/chiroptera-install.desktop" \

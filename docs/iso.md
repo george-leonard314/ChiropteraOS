@@ -154,6 +154,37 @@ the created user. What that run exposed, all fixed here:
   that QEMU run it did exactly that, the step was ignored as designed, and
   the install finished on stock Arch.
 
+## Found on real hardware
+
+The first install on a real laptop (mainLaptop, 2026-09-13) went wrong in four
+ways QEMU never showed. All are fixed here.
+
+- **The installer could not find the system image.** archiso's boot hook
+  copies the image into RAM when it is under 4 GiB and the machine has
+  2 GiB more free memory than that. It then unmounts the boot medium and
+  deletes `/run/archiso/bootmnt`, where `unpackfs` reads the image and the
+  kernel. Every boot entry now passes `copytoram=n`.
+- **The extra apps were skipped without a word.** Calamares checks the
+  internet once, on the welcome page. The live session opens the installer
+  seconds after the desktop appears, before a laptop has joined Wi-Fi, and
+  the `packages` module skips everything when that first check said no.
+  `chiroptera-netcheck`, a small job module in `calamares/job-modules`,
+  checks again just before the online steps.
+- **BlackArch and the extra apps had no DNS.** The hwd step pointed
+  `/etc/resolv.conf` back at systemd-resolved's stub before those steps ran.
+  The stub lives under `/run`, an empty tmpfs inside the chroot.
+  `shellprocess@resolv` now does that after the last online step.
+- **The CachyOS upgrade failed on conflicting firmware files.** Arch's
+  20260910 firmware release split `linux-firmware-ti` and
+  `linux-firmware-amd` out of `linux-firmware-other`. CachyOS still ships
+  the older layout under a higher epoch, so its `linux-firmware-other`
+  carries files those two already own, and pacman refused the whole
+  upgrade. `chiroptera-hwd` now removes such packages first; see
+  `docs/hwd.md`.
+
+Every online step may fail without stopping the install, so the installer
+log is now kept on the target as `/var/log/chiroptera-installer.log`.
+
 ## Testing it in a virtual machine
 
 QEMU with OVMF is what the install above was verified on. In VirtualBox the
