@@ -19,11 +19,8 @@ Read the dry run before applying. It is the whole change.
 1. Initialises pacman's keyring if it has no master key (`pacman-key --init`,
    a no-op on an initialised system), then imports and locally signs CachyOS
    key `F3B607488DB35A47`, installs `cachyos-keyring` and the mirrorlists,
-   comments out `cdn77.cachyos.org` in each of them, then inserts the CachyOS
-   sections for the CPU level directly above `[core]` in `/etc/pacman.conf`.
-   That CDN can serve a new repository database alongside the previous
-   signature, which pacman rejects as an invalid signature without trying the
-   next mirror. A later mirrorlist update keeps the edit and leaves a `.pacnew`.
+   then inserts the CachyOS sections for the CPU level directly above
+   `[core]` in `/etc/pacman.conf`.
 2. Removes `nvidia-open` if it is installed: it pins `nvidia-utils` to its
    own version, and once CachyOS's build moves that package ahead, the pin
    blocks the upgrade below. Then installs CachyOS's pacman with
