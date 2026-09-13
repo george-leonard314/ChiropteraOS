@@ -28,7 +28,8 @@ read -r -a packages <<<"${PACKAGES:-app2unit pacseek evdi-dkms displaylink chiro
 #   --nodeps    chiroptera-dots, chiroptera-meta, chiroptera-hwd,
 #               chiroptera-themes and
 #               chiroptera-calamares-config have no
-#               build() at all.
+#               build() at all. Their makedepends are still installed
+#               (chiroptera-dots needs librsvg in package()).
 #               Installing their runtime dependencies would pull hundreds of
 #               megabytes into the builder and prove nothing about whether the
 #               published repository resolves. smoke-test.sh proves that.
@@ -113,6 +114,17 @@ build_one() {
 
     echo "$pkg: building"
     local -a flags=(--noconfirm --cleanbuild --force)
+    # --nodeps skips makedepends along with depends. chiroptera-dots renders its
+    # fastfetch logo with rsvg-convert at package time, and used to build only
+    # when an earlier --syncdeps package in the same run had pulled librsvg in.
+    if [[ ${extra_flags[$pkg]:-} == *--nodeps* ]]; then
+        local -a makedeps
+        mapfile -t makedeps < <(cd "$dir" && makepkg --printsrcinfo \
+            | awk -F' = ' '$1 == "\tmakedepends" { print $2 }')
+        if ((${#makedeps[@]})); then
+            sudo pacman -S --needed --noconfirm "${makedeps[@]}"
+        fi
+    fi
     # shellcheck disable=SC2206
     [[ -n ${extra_flags[$pkg]:-} ]] && flags+=(${extra_flags[$pkg]})
 
