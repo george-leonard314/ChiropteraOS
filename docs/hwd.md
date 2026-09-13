@@ -61,6 +61,19 @@ stale NVIDIA module.
 If a step fails, apply names it and stops. Fix the cause and run apply again;
 every step is safe to repeat.
 
+Step 2 also removes, right before the upgrade, any installed
+`linux-firmware-*` package the CachyOS repositories do not carry. Arch's
+20260910 firmware release split `linux-firmware-ti` and `linux-firmware-amd`
+out of `linux-firmware-other`. CachyOS still ships the older layout under a
+higher epoch, so its `linux-firmware-other` holds files those two already
+own, and pacman refuses the whole upgrade over the conflict. If the upgrade
+fails anyway, the removed packages are reinstalled. Once CachyOS ships the
+split packages, nothing matches and nothing is removed. CachyOS's
+`linux-firmware-other` lacks two of the removed files, the TI `tas2573`
+amplifier firmware, so a machine with that chip loses it until CachyOS
+catches up. Verified on mainLaptop on 2026-09-13: apply removed both
+packages, the upgrade and every later step completed.
+
 ### Expected noise
 
 Step 3 may print mkinitcpio's `ERROR: module not found: 'nvidia'` while

@@ -266,6 +266,7 @@ STAMP=
 TMPD=
 CURRENT_STEP=
 REMOVED_NVIDIA_OPEN=0
+DROPPED_FIRMWARE=()
 
 # Not named `run`: bats defines run(), and the tests source this file.
 runcmd() {
@@ -408,6 +409,62 @@ EOF
 # drop-in and rebuilds the fallback image even though
 # linux-cachyos-nvidia-open is not installed yet. Idempotent: an
 # already-removed package is a no-op.
+# Arch's 20260910 firmware release split linux-firmware-ti and
+# linux-firmware-amd out of linux-firmware-other. CachyOS still ships the
+# older, unsplit layout under a higher epoch, so its linux-firmware-other
+# carries files those two already own, and the upgrade fails on conflicting
+# files. Seen on mainLaptop, 2026-09-13. Any installed linux-firmware-*
+# package the CachyOS repositories do not carry is therefore removed right
+# before the upgrade; once CachyOS ships the split packages, nothing matches.
+
+# Print the installed linux-firmware-* names absent from the CachyOS list.
+split_firmware() {  # installed-list-file cachyos-list-file
+    awk 'NR == FNR { cachy[$0] = 1; next }
+         /^linux-firmware-/ && !($0 in cachy)' "$2" "$1"
+}
+
+installed_pkgs() {
+    if [[ -n ${HWD_INSTALLED:-} ]]; then
+        cat "$HWD_INSTALLED"
+    else
+        pacman -Qq
+    fi
+}
+
+# Every package name in the synced cachyos* repositories. HWD_CACHYOS_PKGS
+# (a file, one name per line) replaces it in tests.
+cachyos_pkgs() {
+    if [[ -n ${HWD_CACHYOS_PKGS:-} ]]; then
+        cat "$HWD_CACHYOS_PKGS"
+    else
+        pacman -Sl 2>/dev/null | awk '$1 ~ /^cachyos/ { print $2 }'
+    fi
+}
+
+step_drop_split_firmware() {
+    local list=$TMPD/cachyos-pkgs
+    cachyos_pkgs > "$list"
+    # Without synced CachyOS databases every firmware package would look
+    # missing; remove nothing rather than guess.
+    if [[ ! -s $list ]]; then
+        if (( DRY_RUN )); then
+            printf 'The CachyOS repositories are not synced yet: step 2 removes any linux-firmware package they do not carry before the upgrade.\n'
+        fi
+        return 0
+    fi
+    mapfile -t DROPPED_FIRMWARE < <(split_firmware <(installed_pkgs) "$list")
+    if (( ${#DROPPED_FIRMWARE[@]} == 0 )); then return 0; fi
+    printf '%s: not in the CachyOS repositories, whose linux-firmware-other carries the same files; removed before the upgrade (see docs/hwd.md).\n' "${DROPPED_FIRMWARE[*]}"
+    pac -Rdd "${DROPPED_FIRMWARE[@]}"
+}
+
+# A failed upgrade must not leave the machine without that firmware.
+restore_split_firmware() {
+    if (( ${#DROPPED_FIRMWARE[@]} == 0 )); then return 0; fi
+    printf 'chiroptera-hwd: the upgrade failed; reinstalling %s\n' "${DROPPED_FIRMWARE[*]}" >&2
+    pac -S --needed "${DROPPED_FIRMWARE[@]}" || true
+}
+
 step_drop_stock_nvidia() {
     if installed_pkg nvidia-open; then
         printf "nvidia-open pins nvidia-utils to its own version and would block the upgrade; the stock fallback runs without NVIDIA (see docs/hwd.md).\n"
@@ -517,7 +574,11 @@ cmd_apply() {
     # fetched cachyos.db from mirror.cachyos.org, and -Sy alone would trust
     # that copy instead of replacing it with what the real mirrorlist serves.
     pac -Syy --needed cachyos/pacman
-    pac -Syu
+    step_drop_split_firmware
+    if ! pac -Syu; then
+        restore_split_firmware
+        exit 1
+    fi
 
     step "3/5: kernel and CachyOS packages"
     pac -S --needed "${pkgs[@]}"
