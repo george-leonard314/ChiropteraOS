@@ -63,7 +63,7 @@ fi
 
 # Every package this repository exists to provide must come from it, not be
 # quietly satisfied by something else.
-for required in app2unit chiroptera-shell chiroptera-dots; do
+for required in app2unit pacseek chiroptera-shell chiroptera-dots; do
     grep -q "/$required-" <<<"$resolution" \
         || fail "$required was not part of resolving $TARGET"
 done

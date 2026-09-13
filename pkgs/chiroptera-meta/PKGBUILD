@@ -1,7 +1,7 @@
 # Maintainer: George (ChiropteraOS)
 
 pkgname=chiroptera-meta
-pkgver=0.1.2
+pkgver=0.1.3
 pkgrel=1
 pkgdesc='Everything a ChiropteraOS desktop needs'
 arch=('any')
@@ -20,6 +20,9 @@ depends=(
   # App launching and input tools the keybinds route through
   # app2unit is vendored from the AUR into pkgs/app2unit; see docs/repository.md.
   'app2unit' 'ydotool' 'qps' 'pavucontrol'
+  # Package search and install in the terminal
+  # pacseek is vendored from the AUR into pkgs/pacseek; see docs/repository.md.
+  'pacseek'
   # Audio, network, bluetooth
   'pipewire' 'pipewire-pulse' 'pipewire-alsa' 'wireplumber' 'networkmanager' 'bluez' 'bluez-utils'
   # File manager and the pieces that make it useful: archives, thumbnails,

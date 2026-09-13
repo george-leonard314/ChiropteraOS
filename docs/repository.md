@@ -13,6 +13,7 @@ repository has to carry it.
 | Package | Arch | Source |
 |---|---|---|
 | `app2unit` | any | Public GitHub tarball, vendored from the AUR |
+| `pacseek` | any | Public GitHub tarball, vendored from the AUR |
 | `evdi-dkms` | x86_64 | Public GitHub tarball, vendored from the AUR |
 | `displaylink` | x86_64 | Synaptics download, vendored from the AUR — **proprietary** |
 | `chiroptera-shell` | x86_64 | Private repository, tag `v5.0.1-chiroptera1` |
@@ -63,8 +64,9 @@ The build is incremental: a package is built only when its exact
 `pkgver-pkgrel` is not already in the restored `repo/`, which comes from the
 Actions cache. Losing that cache costs a full rebuild, never correctness.
 
-Only `chiroptera-shell` and `app2unit` have their dependencies synced — the
-former compiles, the latter renders man pages with `scdoc`. `chiroptera-dots`
+Only the packages that build something have their dependencies synced:
+`chiroptera-shell`, `kmg`, `pacseek` and `evdi-dkms` compile, and `app2unit`
+renders man pages with `scdoc`. `chiroptera-dots`
 and `chiroptera-meta` build with `--nodeps`: they have no `build()` at all, so
 installing their runtime dependencies would pull hundreds of megabytes into the
 builder and prove nothing. The smoke test proves what matters instead.

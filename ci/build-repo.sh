@@ -17,13 +17,13 @@ FORCE_REBUILD=${FORCE_REBUILD:-0}
 
 # Dependencies before dependents. Overridable so a local run can exercise the
 # script without recompiling the shell.
-read -r -a packages <<<"${PACKAGES:-app2unit evdi-dkms displaylink chiroptera-shell chiroptera-dots chiroptera-meta chiroptera-hwd chiroptera-themes chiroptera-calamares-config kmg}"
+read -r -a packages <<<"${PACKAGES:-app2unit pacseek evdi-dkms displaylink chiroptera-shell chiroptera-dots chiroptera-meta chiroptera-hwd chiroptera-themes chiroptera-calamares-config kmg}"
 
 # Dependency handling, per package:
 #
-#   --syncdeps  chiroptera-shell and kmg compile; app2unit renders man pages with
-#               scdoc; evdi-dkms builds its library and pyevdi bindings. All
-#               genuinely need their makedepends installed.
+#   --syncdeps  chiroptera-shell, kmg and pacseek compile; app2unit renders man
+#               pages with scdoc; evdi-dkms builds its library and pyevdi
+#               bindings. All genuinely need their makedepends installed.
 #
 #   --nodeps    chiroptera-dots, chiroptera-meta, chiroptera-hwd,
 #               chiroptera-themes and
@@ -42,6 +42,7 @@ read -r -a packages <<<"${PACKAGES:-app2unit evdi-dkms displaylink chiroptera-sh
 #               which base-devel already provides.
 declare -A extra_flags=(
     [app2unit]="--syncdeps"
+    [pacseek]="--syncdeps"
     [evdi-dkms]="--syncdeps"
     [displaylink]="--nodeps"
     [chiroptera-shell]="--syncdeps"
