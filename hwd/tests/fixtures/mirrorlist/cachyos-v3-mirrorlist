@@ -1,0 +1,10 @@
+######################################################
+####        CachyOS Repository Mirrorlist         ####
+######################################################
+## CDN77 (World Wide Datacenters)
+Server = https://cdn77.cachyos.org/repo/$arch_v3/$repo
+## Rerouted to mirror
+# Server = https://cdn.cachyos.org/repo/$arch_v3/$repo
+## USA Mirror much thanks to corpdecker!
+Server = https://us.cachyos.org/repo/$arch_v3/$repo
+  Server=http://cdn77.cachyos.org/repo/$arch_v3/$repo

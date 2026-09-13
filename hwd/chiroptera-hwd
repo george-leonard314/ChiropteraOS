@@ -130,6 +130,15 @@ mirrorlists_for() {  # level
     done | awk '!seen[$0]++'
 }
 
+# Every stock CachyOS mirrorlist puts cdn77.cachyos.org first. That CDN caches
+# a database and its .sig separately, so after a repository update it can serve
+# the new database with the old signature for hours. pacman reports that as an
+# invalid signature and does not try the next server. The lists are pacman
+# backup files, so an upgrade keeps this edit and writes a .pacnew next to it.
+without_cdn_mirror() {  # < mirrorlist
+    sed -E 's|^[[:space:]]*Server[[:space:]]*=[[:space:]]*https?://cdn77\.cachyos\.org/|#&|'
+}
+
 packages_for() {  # microcode virt
     local -a pkgs=(linux-cachyos linux-cachyos-headers)
     if [[ -n $1 ]]; then pkgs+=("$1"); fi
@@ -337,6 +346,19 @@ SigLevel = Required DatabaseOptional
 Server = $CACHYOS_BOOTSTRAP_SERVER
 EOF
     pac --config "$boot" -Sy --needed cachyos-keyring "${mirrorlists[@]}"
+
+    local list
+    for list in "${mirrorlists[@]}"; do
+        list=$HWD_ROOT/etc/pacman.d/$list
+        if [[ -e $list ]]; then
+            without_cdn_mirror < "$list" > "$TMPD/mirrorlist"
+            replace_file "$list" "$TMPD/mirrorlist"
+        elif (( DRY_RUN )); then
+            printf '+ comment out cdn77.cachyos.org in %s\n' "$list"
+        else
+            die "$list is missing after installing it"
+        fi
+    done
 
     local new=$TMPD/pacman.conf
     local ec=0
