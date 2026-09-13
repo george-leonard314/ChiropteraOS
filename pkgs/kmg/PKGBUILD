@@ -6,7 +6,7 @@ pkgname=kmg
 _srcname=kmg
 pkgver=3.8.3.kmg1
 _tag=v3.8.3-kmg1
-pkgrel=1
+pkgrel=2
 _electron=electron43
 pkgdesc='KMG: personal knowledge base, a rebrand of SiYuan built on the system Electron'
 arch=('x86_64')
@@ -39,11 +39,18 @@ _go_env() {
 prepare() {
   cd "$srcdir/$_srcname/app"
   # Pin the Electron devDependency to the system package so electron-builder
-  # packs against exactly what /usr/lib/$_electron ships. The mobile bundle is
-  # not part of a desktop package.
-  local ev; ev=$("$_electron" -v | sed 's/^v//')
+  # packs against exactly what /usr/lib/$_electron ships. Read the version
+  # file rather than running Electron: in an unprivileged build container
+  # Chromium cannot set up its sandbox, aborts, and leaves the pin empty.
+  # The mobile bundle is not part of a desktop package.
+  local ev; ev=$(<"/usr/lib/$_electron/version")
+  [[ $ev =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]] || { echo "cannot read the $_electron version" >&2; return 1; }
+  # desktopName becomes the Wayland app_id. Upstream's org.b3log.siyuan left
+  # the window unmatched by kmg.desktop and by the Hyprland rules for kmg.
   sed -i -e '/"build:mobile"/d' \
-         -e "s/\"electron\": \"[^\"]*\"/\"electron\": \"$ev\"/" package.json
+         -e "s/\"electron\": \"[^\"]*\"/\"electron\": \"$ev\"/" \
+         -e 's/"desktopName": "[^"]*"/"desktopName": "kmg.desktop"/' package.json
+  grep -q '"desktopName": "kmg.desktop"' package.json
   _pnpm_env
   NODE_ENV=development pnpm install --no-frozen-lockfile
   cd ../kernel
