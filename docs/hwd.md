@@ -20,7 +20,12 @@ Read the dry run before applying. It is the whole change.
    a no-op on an initialised system), then imports and locally signs CachyOS
    key `F3B607488DB35A47`, installs `cachyos-keyring` and the mirrorlists,
    then inserts the CachyOS sections for the CPU level directly above
-   `[core]` in `/etc/pacman.conf`.
+   `[core]` in `/etc/pacman.conf`. Each section gets
+   `SigLevel = PackageRequired DatabaseNever`: packages are still
+   signature-checked, but databases are not, the same as Arch's own
+   repositories. cdn77.cachyos.org, first in CachyOS's mirrorlists, can serve
+   a database with an older database's signature for hours, which otherwise
+   stops every sync.
 2. Removes `nvidia-open` if it is installed: it pins `nvidia-utils` to its
    own version, and once CachyOS's build moves that package ahead, the pin
    blocks the upgrade below. Then installs CachyOS's pacman with

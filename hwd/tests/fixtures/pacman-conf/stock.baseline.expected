@@ -9,6 +9,7 @@ LocalFileSigLevel = Optional
 #Include = /etc/pacman.d/mirrorlist
 
 [cachyos]
+SigLevel = PackageRequired DatabaseNever
 Include = /etc/pacman.d/cachyos-mirrorlist
 
 [core]

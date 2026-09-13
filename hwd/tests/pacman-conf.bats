@@ -60,15 +60,19 @@ expect_edit() {  # input level expected
 @test "repo_block v4 names every section with its mirrorlist" {
     run repo_block v4
     [ "$output" = "[cachyos-v4]
+SigLevel = PackageRequired DatabaseNever
 Include = /etc/pacman.d/cachyos-v4-mirrorlist
 
 [cachyos-core-v4]
+SigLevel = PackageRequired DatabaseNever
 Include = /etc/pacman.d/cachyos-v4-mirrorlist
 
 [cachyos-extra-v4]
+SigLevel = PackageRequired DatabaseNever
 Include = /etc/pacman.d/cachyos-v4-mirrorlist
 
 [cachyos]
+SigLevel = PackageRequired DatabaseNever
 Include = /etc/pacman.d/cachyos-mirrorlist" ]
 }
 

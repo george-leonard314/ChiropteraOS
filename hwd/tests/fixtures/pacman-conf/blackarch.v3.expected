@@ -5,15 +5,19 @@ IgnorePkg   = equicord-openasar
 SigLevel    = Required DatabaseOptional
 
 [cachyos-v3]
+SigLevel = PackageRequired DatabaseNever
 Include = /etc/pacman.d/cachyos-v3-mirrorlist
 
 [cachyos-core-v3]
+SigLevel = PackageRequired DatabaseNever
 Include = /etc/pacman.d/cachyos-v3-mirrorlist
 
 [cachyos-extra-v3]
+SigLevel = PackageRequired DatabaseNever
 Include = /etc/pacman.d/cachyos-v3-mirrorlist
 
 [cachyos]
+SigLevel = PackageRequired DatabaseNever
 Include = /etc/pacman.d/cachyos-mirrorlist
 
 [core]

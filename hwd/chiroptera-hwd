@@ -143,12 +143,20 @@ packages_for() {  # microcode virt
 
 # ---- pacman.conf -------------------------------------------------------------
 
+# Packages stay signature-checked; the databases do not. cdn77.cachyos.org,
+# first in every stock CachyOS mirrorlist, can serve a database with the
+# signature of an older one for hours, and pacman then refuses to sync at all.
+# Reordering the mirrors only trades that for another mirror's faults. Arch
+# does not sign the [core] or [extra] databases either.
+CACHYOS_SIGLEVEL='PackageRequired DatabaseNever'
+
 repo_block() {  # level
     local repo first=1
     for repo in $(repos_for "$1"); do
         if (( ! first )); then echo; fi
         first=0
-        printf '[%s]\nInclude = /etc/pacman.d/%s\n' "$repo" "$(mirrorlist_for_repo "$repo")"
+        printf '[%s]\nSigLevel = %s\nInclude = /etc/pacman.d/%s\n' \
+            "$repo" "$CACHYOS_SIGLEVEL" "$(mirrorlist_for_repo "$repo")"
     done
 }
 
@@ -334,6 +342,7 @@ Architecture = auto
 SigLevel = Required DatabaseOptional
 
 [cachyos]
+SigLevel = $CACHYOS_SIGLEVEL
 Server = $CACHYOS_BOOTSTRAP_SERVER
 EOF
     pac --config "$boot" -Sy --needed cachyos-keyring "${mirrorlists[@]}"

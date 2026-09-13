@@ -1,7 +1,7 @@
 # Maintainer: George (ChiropteraOS)
 
 pkgname=chiroptera-hwd
-pkgver=0.2.4
+pkgver=0.2.5
 pkgrel=1
 pkgdesc='Match an Arch install to its hardware: CachyOS repositories, kernel, microcode, boot entry'
 arch=('any')
