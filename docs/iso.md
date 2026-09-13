@@ -69,11 +69,17 @@ now unmounts everything under the work directory first and deletes with
   apps box, covers the AUR. Each step is skipped without the internet and can
   be re-run by hand afterwards.
 - **One tick box installs the extra apps.** The installer's "Extra apps" page
-  (`netinstall`, ticked by default) holds six packages, listed in
-  `calamares/chiroptera-netinstall.yaml`: Brave, VSCodium, OnlyOffice, GIMP,
-  and `base-devel` plus `paru` so the AUR works. Its `packages` job
+  (`netinstall`, ticked by default) holds five packages, listed in
+  `calamares/chiroptera-netinstall.yaml`: VSCodium, OnlyOffice, GIMP, and
+  `base-devel` plus `paru` so the AUR works. Its `packages` job
   runs after `chiroptera-hwd`, when the CachyOS repositories those come from
   exist. AUR-only apps cannot be installed from there.
+- **The browser is a choice.** The installer's "Browser" page
+  (`packagechooser`, `calamares/modules/chiroptera-packagechooser-browser.conf`)
+  takes exactly one of Firefox (preselected), Zen Browser and Brave. The same
+  `packages` job installs it, so without the internet no browser is
+  installed. Win+W runs `chiroptera-browser` from `chiroptera-dots`, which
+  opens whichever of the three is installed.
 - **The desktop is in the image** (`chiroptera-meta`): the shell, the
   dotfiles, Thunar with archive, thumbnail, trash and mounting support,
   nwg-displays and nano among them, and KMG for notes (`pkgs/kmg`, a rebrand

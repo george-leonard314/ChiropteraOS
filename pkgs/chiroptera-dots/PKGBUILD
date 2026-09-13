@@ -2,8 +2,8 @@
 
 pkgname=chiroptera-dots
 _srcname=chiroptera-dots
-pkgver=0.1.7
-_tag=v0.1.7
+pkgver=0.1.8
+_tag=v0.1.8
 pkgrel=1
 pkgdesc='ChiropteraOS dotfiles: Hyprland, Chiroptera Shell, fish, foot, fastfetch'
 arch=('any')
@@ -65,6 +65,7 @@ package() {
     -o "$pkgdir/etc/skel/.local/share/chiroptera/branding/fastfetch-logo.png"
   install -Dm755 bin/chiroptera-super-tap "$pkgdir/usr/bin/chiroptera-super-tap"
   install -Dm755 bin/chiroptera-toggle    "$pkgdir/usr/bin/chiroptera-toggle"
+  install -Dm755 bin/chiroptera-browser   "$pkgdir/usr/bin/chiroptera-browser"
   # Shadow the launcher entries dependencies install; see
   # share/applications/README.md in chiroptera-dots.
   install -Dm644 -t "$pkgdir/etc/skel/.local/share/applications" share/applications/*.desktop

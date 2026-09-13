@@ -1,7 +1,7 @@
 # Maintainer: George (ChiropteraOS)
 
 pkgname=chiroptera-calamares-config
-pkgver=0.1.1
+pkgver=0.1.2
 pkgrel=1
 pkgdesc='ChiropteraOS installer: Calamares settings, modules and branding'
 arch=('any')

@@ -1,9 +1,10 @@
 # The installer's "Extra apps" page. Ticked by default: these are the apps
 # George wants on a fresh machine that are too big for the image itself.
 # They come from the CachyOS repositories, which is why the packages job runs
-# after chiroptera-hwd. Notes (KMG) come with the image through chiroptera-meta.
+# after chiroptera-hwd. Notes (KMG) come with the image through chiroptera-meta;
+# the browser is its own page (chiroptera-packagechooser-browser.conf).
 - name: "Apps"
-  description: "Brave, VSCodium, OnlyOffice and GIMP, plus paru so the AUR works. About 3 GB; needs the internet."
+  description: "VSCodium, OnlyOffice and GIMP, plus paru so the AUR works. Needs the internet."
   selected: true
   hidden: false
   critical: false
@@ -11,7 +12,6 @@
   packages:
     - base-devel
     - paru
-    - brave-bin
     - vscodium
     - onlyoffice-bin
     - gimp
