@@ -1,7 +1,7 @@
 # Maintainer: George (ChiropteraOS)
 
 pkgname=chiroptera-meta
-pkgver=0.1.3
+pkgver=0.1.4
 pkgrel=1
 pkgdesc='Everything a ChiropteraOS desktop needs'
 arch=('any')
@@ -28,6 +28,9 @@ depends=(
   # File manager and the pieces that make it useful: archives, thumbnails,
   # trash and mounting. Thunar's terminal is set to foot in chiroptera-dots.
   'thunar' 'thunar-archive-plugin' 'file-roller' 'tumbler' 'gvfs' 'gvfs-mtp'
+  # Documents, Pictures and the other home folders: the installer creates them
+  # for the new account, and its user service keeps them for later ones
+  'xdg-user-dirs'
   # Monitor layout editor, and an editor that is always there
   'nwg-displays' 'nano'
   # Look and feel

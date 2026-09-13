@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Runs inside the target chroot right after users@chiroptera creates the
+# account: give it Documents, Pictures, Downloads and the other XDG user
+# folders, and the ~/.config/user-dirs.dirs that Thunar and file pickers read,
+# before the first login. The folder names follow the system locale.
+#
+# Usage: chiroptera-user-dirs <username>
+exec 2>&1
+set -u
+
+user=${1:?usage: chiroptera-user-dirs <username>}
+home=$(getent passwd "$user" | cut -d: -f6)
+if [[ -z $home || ! -d $home ]]; then
+    echo "chiroptera-user-dirs: $user has no home directory"
+    exit 1
+fi
+
+# localecfg has already written the system locale; Calamares' own LANG is the
+# installer's UI language, which may differ.
+lang=$(. /etc/locale.conf 2>/dev/null; echo "${LANG:-C.UTF-8}")
+
+runuser -u "$user" -- env HOME="$home" LANG="$lang" xdg-user-dirs-update
+
+# The package's user service recreates missing folders before every graphical
+# session, for this account and any added later. It ships disabled.
+systemctl --global enable xdg-user-dirs.service

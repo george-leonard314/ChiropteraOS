@@ -80,6 +80,12 @@ now unmounts everything under the work directory first and deletes with
   `packages` job installs it, so without the internet no browser is
   installed. Win+W runs `chiroptera-browser` from `chiroptera-dots`, which
   opens whichever of the three is installed.
+- **The account starts with its home folders.** Right after the user is
+  created, `shellprocess@userdirs` runs `chiroptera-user-dirs`, which runs
+  `xdg-user-dirs-update` as that user: Desktop, Documents, Downloads, Music,
+  Pictures, Projects, Public, Templates and Videos, named in the system
+  locale. It also enables `xdg-user-dirs.service` globally, so accounts
+  added later get them at their first login.
 - **The desktop is in the image** (`chiroptera-meta`): the shell, the
   dotfiles, Thunar with archive, thumbnail, trash and mounting support,
   nwg-displays and nano among them, and KMG for notes (`pkgs/kmg`, a rebrand
