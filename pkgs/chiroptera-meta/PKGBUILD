@@ -1,7 +1,7 @@
 # Maintainer: George (ChiropteraOS)
 
 pkgname=chiroptera-meta
-pkgver=0.1.5
+pkgver=0.1.6
 pkgrel=1
 pkgdesc='Everything a ChiropteraOS desktop needs'
 arch=('any')
@@ -39,7 +39,7 @@ depends=(
   # Look and feel
   # Repo names, not the AUR -kde variants: those provide these, so both satisfy it.
   'adw-gtk-theme' 'papirus-icon-theme' 'qt5ct' 'qt6ct'
-  'ttf-jetbrains-mono-nerd' 'noto-fonts' 'noto-fonts-cjk' 'noto-fonts-emoji'
+  'ttf-hack-nerd' 'noto-fonts' 'noto-fonts-cjk' 'noto-fonts-emoji'
   'ttf-material-symbols-variable'
   # Sound effects used by the fish error hook
   'sound-theme-freedesktop' 'libpulse'
