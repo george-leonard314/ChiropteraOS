@@ -4,9 +4,9 @@
 
 pkgname=kmg
 _srcname=kmg
-pkgver=3.8.3.kmg1
-_tag=v3.8.3-kmg1
-pkgrel=2
+pkgver=3.8.3.kmg2
+_tag=v3.8.3-kmg2
+pkgrel=1
 _electron=electron43
 pkgdesc='KMG: personal knowledge base, a rebrand of SiYuan built on the system Electron'
 arch=('x86_64')
