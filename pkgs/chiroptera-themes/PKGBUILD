@@ -1,14 +1,14 @@
 # Maintainer: George (ChiropteraOS)
 
 pkgname=chiroptera-themes
-pkgver=0.1.0
+pkgver=0.1.1
 pkgrel=1
-pkgdesc='ChiropteraOS boot and login look: Dark Matter GRUB theme, branded Noctalia greeter'
+pkgdesc='ChiropteraOS boot and login: Dark Matter GRUB theme, branded Noctalia greeter, the ChiropteraOS session'
 arch=('any')
 url='https://github.com/george-leonard314/ChiropteraOS'
 # Dark Matter (themes/grub/darkmatter) is GPL-3.0 by VandalByte; the rest is MIT.
 license=('GPL-3.0-only' 'MIT')
-depends=('noctalia-greeter' 'chiroptera-dots')
+depends=('noctalia-greeter' 'chiroptera-dots' 'hyprland')
 optdepends=('grub: the Dark Matter boot menu theme')
 install=chiroptera-themes.install
 
@@ -30,4 +30,10 @@ package() {
     "$src/greeter/sync.toml" "$src/greeter/greeter.toml"
   install -Dm644 "$src/greeter/chiroptera-greeter.conf" \
     "$pkgdir/usr/lib/sysusers.d/chiroptera-greeter.conf"
+
+  # The "ChiropteraOS" session: Hyprland with DisplayLink's evdi cards kept out
+  # of AQ_DRM_DEVICES. greeter.toml makes it the login screen's default.
+  install -Dm755 "$src/session/chiroptera-session" "$pkgdir/usr/bin/chiroptera-session"
+  install -Dm644 "$src/session/chiroptera.desktop" \
+    "$pkgdir/usr/share/wayland-sessions/chiroptera.desktop"
 }

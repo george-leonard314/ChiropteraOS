@@ -21,6 +21,17 @@ post_install() {
   echo '==> GRUB theme: GRUB_THEME="/usr/share/grub/themes/darkmatter/theme.txt" in /etc/default/grub'
 }
 
+# 0.1.1 added the ChiropteraOS session. A greeter.toml still exactly as 0.1.0
+# seeded it moves its default there; one the administrator edited is left alone.
+_migrate_default_session() {
+  local f=/var/lib/noctalia-greeter/greeter.toml
+  [[ -f $f ]] || return 0
+  if [[ "$(grep -vE '^[[:space:]]*(#|$)' "$f")" == $'[session]\ndefault = "Hyprland"' ]]; then
+    sed -i 's/^default = "Hyprland"$/default = "ChiropteraOS"/' "$f"
+  fi
+}
+
 post_upgrade() {
   _seed
+  _migrate_default_session
 }

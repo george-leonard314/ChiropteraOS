@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=ChiropteraOS
+Comment=Hyprland on the real GPUs only, with DisplayLink's virtual cards left out
+Exec=/usr/bin/chiroptera-session
+TryExec=/usr/bin/chiroptera-session
+Type=Application
+DesktopNames=Hyprland
+Keywords=tiling;wayland;compositor;

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Start the live Hyprland session, telling Hyprland which DRM devices to render
-# on and leaving DisplayLink's virtual cards out of that list.
+# Start Hyprland, telling it which DRM devices to render on and leaving
+# DisplayLink's virtual cards out of that list. The live ISO's greetd logs
+# straight into this; installed systems start it as the "ChiropteraOS" session,
+# the login screen's default (chiroptera.desktop, greeter.toml).
 #
 # evdi -- the kernel module DisplayLink docks render through -- registers
 # /dev/dri/card* nodes that cannot render anything themselves. With
@@ -12,8 +14,9 @@
 # Diagnosed on mainLaptop, 2026-09-12. A session that happened to start before
 # the dock's second evdi card appeared ran for three and a half hours; every
 # session that started with both evdi cards already present went black within
-# seconds. Since this image now ships DisplayLink, the live session would hit
-# that race on any machine with a dock attached at boot.
+# seconds. Since the image ships DisplayLink, any session would hit that race
+# on a machine with a dock attached at boot. Installed systems used to start
+# Hyprland's own session without this, and did.
 #
 # Listing only the real GPUs is equivalent to the automatic behaviour minus the
 # evdi nodes. DisplayLink screens still work: they arrive through

@@ -96,13 +96,15 @@ now unmounts everything under the work directory first and deletes with
   `chiroptera-install` a few seconds after the desktop appears. It is also in
   the launcher as "Install ChiropteraOS", and `chiroptera-install` works from
   a terminal.
-- **Login:** greetd. The live image logs straight into
-  `/usr/local/bin/chiroptera-live-session`, a wrapper that sets
-  `AQ_DRM_DEVICES` to the real GPUs and leaves DisplayLink's evdi cards out of
-  it. Without that, a machine with a dock attached at boot can have Hyprland
-  pick a non-rendering evdi node as its primary device and show nothing at all
-  on any output, with VT switching dead too. Installed systems get
-  `noctalia-greeter`, branded by `chiroptera-themes`.
+- **Login:** greetd. Hyprland always starts through `chiroptera-session`
+  (from `chiroptera-themes`), a wrapper that sets `AQ_DRM_DEVICES` to the
+  real GPUs and leaves DisplayLink's evdi cards out of it. Without that, a
+  machine with a dock attached at boot can have Hyprland pick a
+  non-rendering evdi node as its primary device and show nothing at all on
+  any output, with VT switching dead too. The live image logs straight into
+  it; installed systems get `noctalia-greeter`, branded by
+  `chiroptera-themes`, whose default session "ChiropteraOS" runs it.
+  Hyprland's own "Hyprland" session is still listed but skips the wrapper.
 
   The wrapper is live-only: `chiroptera-live-cleanup` rewrites
   `/etc/greetd/config.toml` on the target, so an installed machine starts

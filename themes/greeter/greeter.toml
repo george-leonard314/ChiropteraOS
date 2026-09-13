@@ -2,5 +2,8 @@
 # /var/lib/noctalia-greeter/greeter.toml on first install only. Appearance is
 # left to sync.toml so the shell's Sync can change it.
 
+# ChiropteraOS, not Hyprland: that session starts Hyprland without
+# chiroptera-session, which keeps DisplayLink's evdi cards out of
+# AQ_DRM_DEVICES. See themes/session/chiroptera-session.
 [session]
-default = "Hyprland"
+default = "ChiropteraOS"
