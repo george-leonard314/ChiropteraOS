@@ -30,9 +30,22 @@ for key in "$CACHYOS_KEY" "${BLACKARCH_KEYS[@]}"; do
     fi
 done
 
+# CI's artifact keeps the two newest builds of each package. repo-add keeps
+# the last file it is handed for a name, and a glob puts chiroptera-dots-0.1.10
+# before 0.1.9, so copy only the newest of each.
+declare -A best_file=() best_ver=()
+for f in "$PACKAGES_DIR"/*.pkg.tar.zst; do
+    [[ $(basename "$f") =~ ^(.+)-([^-]+-[^-]+)-[^-]+\.pkg\.tar\.zst$ ]] || continue
+    name=${BASH_REMATCH[1]}
+    ver=${BASH_REMATCH[2]}
+    if [[ -z ${best_ver[$name]:-} ]] || (($(vercmp "$ver" "${best_ver[$name]}") > 0)); then
+        best_ver[$name]=$ver
+        best_file[$name]=$f
+    fi
+done
 rm -rf /build/repo
 mkdir -p /build/repo
-cp "$PACKAGES_DIR"/*.pkg.tar.zst /build/repo/
+cp "${best_file[@]}" /build/repo/
 repo-add -q /build/repo/chiroptera.db.tar.zst /build/repo/*.pkg.tar.zst
 
 # mkarchiso bind-mounts /dev, /proc and /sys into the work chroot. When a run

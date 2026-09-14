@@ -4,16 +4,18 @@ pkgname=chiroptera-dots
 _srcname=chiroptera-dots
 pkgver=0.1.10
 _tag=v0.1.10
-pkgrel=1
+pkgrel=2
 pkgdesc='ChiropteraOS dotfiles: Hyprland, Chiroptera Shell, fish, foot, fastfetch'
 arch=('any')
 url='https://github.com/george-leonard314/chiroptera-dots'
 license=('GPL-3.0-only')
 makedepends=('librsvg')
+# ttf-hack-nerd: foot, GTK, fontconfig and the Hyprland group bar all name Hack;
+# without it foot falls back to proportional Noto Sans and every cell is too wide.
 # imagemagick: fastfetch renders the Sixel logo through it; without it every
 # terminal shows Arch's ASCII art instead.
 depends=('hyprland' 'chiroptera-shell' 'fish' 'foot' 'fastfetch' 'btop' 'starship'
-         'imagemagick')
+         'imagemagick' 'ttf-hack-nerd')
 optdepends=('thunar: file manager used by the file-explorer keybind'
             'kmg: notes, bound to the notes special workspace'
             'superproductivity: todo, bound to the todo special workspace')

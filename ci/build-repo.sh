@@ -76,6 +76,25 @@ sort_versions_desc() {
     ((${#out[@]})) && printf '%s\n' "${out[@]}"
 }
 
+# The newest file of each package among the given ones. repo-add keeps the
+# last file it is handed for a name, and a glob puts chiroptera-dots-0.1.10
+# before 0.1.9, so passing every retained file publishes the older one.
+newest_packages() {
+    local -A best_file=() best_ver=()
+    local f base name ver
+    for f in "$@"; do
+        base=$(basename "$f")
+        [[ $base =~ ^(.+)-([^-]+-[^-]+)-[^-]+\.pkg\.tar\.[a-z]+$ ]] || continue
+        name=${BASH_REMATCH[1]}
+        ver=${BASH_REMATCH[2]}
+        if [[ -z ${best_ver[$name]:-} ]] || (($(vercmp "$ver" "${best_ver[$name]}") > 0)); then
+            best_ver[$name]=$ver
+            best_file[$name]=$f
+        fi
+    done
+    ((${#best_file[@]})) && printf '%s\n' "${best_file[@]}"
+}
+
 build_one() {
     local pkg=$1
     local dir="$repo_root/pkgs/$pkg"
@@ -198,7 +217,9 @@ build_database() {
     # can never drift from what is actually on disk. That makes repo-add's
     # --new and --remove meaningless here: there is no prior database to
     # amend, and --remove only prints a confusing empty-filename notice.
+    # Older versions stay on disk for rollback but out of the database.
     rm -f "$REPO_DIR/$REPO_NAME".db* "$REPO_DIR/$REPO_NAME".files*
+    mapfile -t pkgfiles < <(newest_packages "${pkgfiles[@]}")
     repo-add "${add_flags[@]}" "$db" "${pkgfiles[@]}"
 
     # repo-add leaves chiroptera.db and chiroptera.files as symlinks. Static
