@@ -2,9 +2,9 @@
 
 pkgname=chiroptera-dots
 _srcname=chiroptera-dots
-pkgver=0.1.10
-_tag=v0.1.10
-pkgrel=2
+pkgver=0.1.11
+_tag=v0.1.11
+pkgrel=1
 pkgdesc='ChiropteraOS dotfiles: Hyprland, Chiroptera Shell, fish, foot, fastfetch'
 arch=('any')
 url='https://github.com/george-leonard314/chiroptera-dots'
@@ -18,7 +18,8 @@ depends=('hyprland' 'chiroptera-shell' 'fish' 'foot' 'fastfetch' 'btop' 'starshi
          'imagemagick' 'ttf-hack-nerd')
 optdepends=('thunar: file manager used by the file-explorer keybind'
             'kmg: notes, bound to the notes special workspace'
-            'superproductivity: todo, bound to the todo special workspace')
+            'superproductivity: todo, bound to the todo special workspace'
+            'python-dbus: ~/.config/miscellaneous/eduroam-fontys.py')
 provides=('chiroptera-dots')
 # Override with a local clone for development builds, e.g. file:///home/g/git/chiroptera-dots
 _repo="${CHIROPTERA_DOTS_REPO:-$url.git}"
