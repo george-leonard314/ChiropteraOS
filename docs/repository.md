@@ -22,6 +22,7 @@ repository has to carry it.
 | `chiroptera-hwd` | any | This repository |
 | `chiroptera-themes` | any | This repository |
 | `chiroptera-calamares-config` | any | This repository |
+| `chiroptera-zen-theme` | any | This repository |
 
 `evdi-dkms` and `displaylink` are what make DisplayLink docks work; the image
 installs both. Two things about them are unlike the rest:

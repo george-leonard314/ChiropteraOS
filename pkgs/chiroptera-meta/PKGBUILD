@@ -1,7 +1,7 @@
 # Maintainer: George (ChiropteraOS)
 
 pkgname=chiroptera-meta
-pkgver=0.1.7
+pkgver=0.1.8
 pkgrel=1
 pkgdesc='Everything a ChiropteraOS desktop needs'
 arch=('any')
@@ -48,6 +48,9 @@ depends=(
   'sound-theme-freedesktop' 'libpulse'
   # Notes: KMG, the SiYuan rebrand from pkgs/kmg, bound to the notes special workspace
   'kmg'
+  # Zen Browser recolors live with the wallpaper when the installer's Browser page
+  # chose it; inert otherwise. From pkgs/chiroptera-zen-theme.
+  'chiroptera-zen-theme'
 )
 # firefox and code are deliberately not declared: no profile or configuration
 # is invested in either, so they are not part of the ChiropteraOS package set.
