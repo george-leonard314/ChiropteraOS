@@ -89,7 +89,7 @@ now unmounts everything under the work directory first and deletes with
 - **The desktop is in the image** (`chiroptera-meta`): the shell, the
   dotfiles, Thunar with archive, thumbnail, trash and mounting support,
   Loupe for images, Celluloid for video, nwg-displays and nano among them, and KMG for notes
-  (`pkgs/kmg`, a rebrand of SiYuan built on the system Electron). `chiroptera-apps`, from
+  (github.com/george-leonard314/kmg, a rebrand of SiYuan built on the system Electron). `chiroptera-apps`, from
   `chiroptera-dots`, installs what no repository carries after first boot.
 - **The installer opens by itself.** The live user's Hyprland overrides file
   is a symlink to `/etc/chiroptera-live/user.conf`, which execs

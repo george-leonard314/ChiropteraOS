@@ -43,7 +43,7 @@ else
 fi
 
 exec docker run "${docker_args[@]}" "$IMAGE" bash -euo pipefail -c '
-    pacman -Syu --needed --noconfirm git sudo >/dev/null
+    pacman -Syu --needed --noconfirm git jq sudo >/dev/null
 
     useradd -m builder
     echo "builder ALL=(ALL) NOPASSWD: /usr/bin/pacman" > /etc/sudoers.d/builder

@@ -46,7 +46,8 @@ depends=(
   'ttf-material-symbols-variable'
   # Sound effects used by the fish error hook
   'sound-theme-freedesktop' 'libpulse'
-  # Notes: KMG, the SiYuan rebrand from pkgs/kmg, bound to the notes special workspace
+  # Notes: KMG, the SiYuan rebrand released by github.com/george-leonard314/kmg,
+  # bound to the notes special workspace
   'kmg'
   # Zen Browser recolors live with the wallpaper when the installer's Browser page
   # chose it; inert otherwise. From pkgs/chiroptera-zen-theme.
