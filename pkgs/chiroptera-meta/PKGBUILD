@@ -1,7 +1,7 @@
 # Maintainer: George (ChiropteraOS)
 
 pkgname=chiroptera-meta
-pkgver=0.1.8
+pkgver=0.1.9
 pkgrel=1
 pkgdesc='Everything a ChiropteraOS desktop needs'
 arch=('any')
@@ -52,6 +52,9 @@ depends=(
   # Zen Browser recolors live with the wallpaper when the installer's Browser page
   # chose it; inert otherwise. From pkgs/chiroptera-zen-theme.
   'chiroptera-zen-theme'
+  # eduroam and other 802.1X passwords move from the keyring into NetworkManager,
+  # so resume and RADIUS hiccups stop asking for them. From pkgs/chiroptera-wifi-secrets.
+  'chiroptera-wifi-secrets'
 )
 # firefox and code are deliberately not declared: no profile or configuration
 # is invested in either, so they are not part of the ChiropteraOS package set.

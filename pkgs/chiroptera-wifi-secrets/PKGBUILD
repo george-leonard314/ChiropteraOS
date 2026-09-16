@@ -1,0 +1,26 @@
+# Maintainer: George (ChiropteraOS)
+
+pkgname=chiroptera-wifi-secrets
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Keeps eduroam and other 802.1X Wi-Fi passwords in NetworkManager, so they are not asked for again'
+arch=('any')
+url='https://github.com/george-leonard314/ChiropteraOS'
+license=('MIT')
+depends=('bash' 'networkmanager')
+# Both files sit beside this PKGBUILD and change with this repository, so there
+# is no checksum to keep -- bump pkgver whenever they change, since CI skips any
+# version it has already built.
+source=('chiroptera-wifi-secrets' 'chiroptera-wifi-secrets.service')
+sha256sums=('SKIP' 'SKIP')
+
+package() {
+    install -Dm755 "$srcdir/chiroptera-wifi-secrets" "$pkgdir/usr/lib/chiroptera/chiroptera-wifi-secrets"
+    install -Dm644 "$srcdir/chiroptera-wifi-secrets.service" \
+        "$pkgdir/usr/lib/systemd/user/chiroptera-wifi-secrets.service"
+    # Enabled for every user by the package itself, like a preset would, so
+    # existing accounts get it without running systemctl.
+    install -dm755 "$pkgdir/usr/lib/systemd/user/graphical-session.target.wants"
+    ln -s ../chiroptera-wifi-secrets.service \
+        "$pkgdir/usr/lib/systemd/user/graphical-session.target.wants/chiroptera-wifi-secrets.service"
+}
