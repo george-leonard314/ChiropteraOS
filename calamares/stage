@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Lay the installer's files into an archiso airootfs:
+#
+#   calamares/stage <airootfs>
+#
+# The installer only ever lives on the live image, so it is not a package:
+# ci/build-iso.sh calls this on a copy of the profile. Executables need a
+# file_permissions entry in iso/profiledef.sh, since mkarchiso does not keep
+# modes. chiroptera-live-cleanup removes these same paths from the target.
+set -euo pipefail
+
+src=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+root=${1:?usage: stage <airootfs>}
+
+install -Dm644 "$src/settings.conf" "$root/etc/calamares/settings.conf"
+install -Dm644 "$src/chiroptera-netinstall.yaml" "$root/etc/calamares/chiroptera-netinstall.yaml"
+install -Dm644 -t "$root/etc/calamares/modules" "$src"/modules/*.conf
+install -Dm755 -t "$root/etc/calamares/scripts" "$src"/scripts/*
+# Our own job modules; settings.conf lists this directory in modules-search.
+for mod in "$src"/job-modules/*/; do
+    install -Dm644 -t "$root/usr/share/chiroptera/calamares/modules/$(basename "$mod")" "$mod"/*
+done
+install -Dm644 -t "$root/usr/share/calamares/branding/chiroptera" "$src"/branding/chiroptera/*
+install -Dm755 "$src/chiroptera-install" "$root/usr/bin/chiroptera-install"
+install -Dm644 "$src/chiroptera-install.desktop" "$root/usr/share/applications/chiroptera-install.desktop"

@@ -61,5 +61,16 @@ pacman-key --populate archlinux
 
 # Live-only packages. The installer goes last: this script belongs to it.
 pacman -Rns --noconfirm mkinitcpio-archiso || true
-pacman -Rns --noconfirm chiroptera-calamares-config calamares || true
+# The tools the image lists only for Calamares go too, unless something
+# installed still needs them (upower does: chiroptera-meta).
+installer_tools=(rsync gptfdisk dmidecode upower qt6-imageformats)
+pacman -D --asdeps "${installer_tools[@]}" >/dev/null 2>&1 || true
+pacman -Rns --noconfirm calamares || true
+mapfile -t orphans < <(pacman -Qdtq 2>/dev/null | grep -xF -f <(printf '%s\n' "${installer_tools[@]}"))
+((${#orphans[@]})) && { pacman -Rns --noconfirm "${orphans[@]}" || true; }
+# The installer's own files are not a package (calamares/stage), so remove
+# them by path, this script included; bash already has it open.
+rm -rf /etc/calamares /usr/share/chiroptera/calamares /usr/share/calamares/branding/chiroptera \
+       /usr/bin/chiroptera-install /usr/share/applications/chiroptera-install.desktop
+rmdir --ignore-fail-on-non-empty /usr/share/chiroptera /usr/share/calamares/branding /usr/share/calamares 2>/dev/null || true
 exit 0

@@ -17,7 +17,7 @@ FORCE_REBUILD=${FORCE_REBUILD:-0}
 
 # Dependencies before dependents. Overridable so a local run can exercise the
 # script without recompiling the shell.
-read -r -a packages <<<"${PACKAGES:-app2unit pacseek evdi-dkms displaylink chiroptera-shell chiroptera-dots chiroptera-meta chiroptera-hwd chiroptera-boot chiroptera-calamares-config kmg}"
+read -r -a packages <<<"${PACKAGES:-app2unit pacseek evdi-dkms displaylink chiroptera-shell chiroptera-dots chiroptera-meta chiroptera-hwd chiroptera-boot kmg}"
 
 # Dependency handling, per package:
 #
@@ -25,10 +25,8 @@ read -r -a packages <<<"${PACKAGES:-app2unit pacseek evdi-dkms displaylink chiro
 #               pages with scdoc; evdi-dkms builds its library and pyevdi
 #               bindings. All genuinely need their makedepends installed.
 #
-#   --nodeps    chiroptera-dots, chiroptera-meta, chiroptera-hwd,
-#               chiroptera-boot and
-#               chiroptera-calamares-config have no
-#               build() at all. Their makedepends are still installed
+#   --nodeps    chiroptera-dots, chiroptera-meta, chiroptera-hwd and
+#               chiroptera-boot have no build() at all. Their makedepends are still installed
 #               (chiroptera-dots needs librsvg in package()).
 #               Installing their runtime dependencies would pull hundreds of
 #               megabytes into the builder and prove nothing about whether the
@@ -51,7 +49,6 @@ declare -A extra_flags=(
     [chiroptera-meta]="--nodeps"
     [chiroptera-hwd]="--nodeps"
     [chiroptera-boot]="--nodeps"
-    [chiroptera-calamares-config]="--nodeps"
 )
 
 # Packages their own repositories build and attach to GitHub releases. They

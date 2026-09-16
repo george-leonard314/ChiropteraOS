@@ -3,15 +3,15 @@
 `iso/` is an archiso profile based on `releng`. Booting it gives a live
 Hyprland desktop running Chiroptera Shell, logged in as the user `live`, with
 **Install ChiropteraOS** in the launcher. The installer is Calamares
-(BlackArch's `calamares`), configured by `calamares/`, which is packaged as
-`chiroptera-calamares-config`.
+(BlackArch's `calamares`), configured by `calamares/`. That is not a package: `ci/build-iso.sh` stages
+it into a copy of the profile with `calamares/stage`, and
+`chiroptera-live-cleanup` removes it from the installed system by path.
 
 ## Build
 
 ```sh
-# Packages: CI's chiroptera-repo artifact plus chiroptera-calamares-config.
+# Packages: CI's chiroptera-repo artifact.
 gh run download <run-id> -n chiroptera-repo -D pkgs-out
-(cd pkgs/chiroptera-calamares-config && makepkg -f --nodeps) && cp pkgs/chiroptera-calamares-config/*.pkg.tar.zst pkgs-out/
 
 docker run --rm --privileged -v "$PWD":/src:ro -v "$HOME/.cache/chiroptera-iso":/build \
   archlinux:base-devel env PACKAGES_DIR=/src/pkgs-out /src/ci/build-iso.sh

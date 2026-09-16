@@ -21,7 +21,6 @@ repository has to carry it.
 | `chiroptera-meta` | any | This repository |
 | `chiroptera-hwd` | any | This repository |
 | `chiroptera-boot` | any | This repository |
-| `chiroptera-calamares-config` | any | This repository |
 | `kmg` | x86_64 | Downloaded from the latest release of `george-leonard314/kmg`, whose own CI builds it |
 
 `evdi-dkms` and `displaylink` are what make DisplayLink docks work; the image

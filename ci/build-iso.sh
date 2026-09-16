@@ -3,7 +3,7 @@
 # archlinux container (mkarchiso needs root and loop-free mtools/xorriso).
 #
 #   PACKAGES_DIR  the built ChiropteraOS packages: CI's chiroptera-repo
-#                 artifact plus chiroptera-calamares-config. Default ./repo.
+#                 artifact. Default ./repo.
 #   OUT_DIR       where the .iso lands. Default /build/out.
 #
 # The work area is /build (about 15 GB); iso/pacman.conf reads the local
@@ -60,5 +60,10 @@ if [[ -d /build/work ]]; then
     rm --one-file-system -rf /build/work
 fi
 
-mkarchiso -v -r -w /build/work -o "$OUT_DIR" "$repo_root/iso"
+# The installer is not a package: its files go into a copy of the profile.
+rm -rf /build/profile
+cp -r "$repo_root/iso" /build/profile
+"$repo_root/calamares/stage" /build/profile/airootfs
+
+mkarchiso -v -r -w /build/work -o "$OUT_DIR" /build/profile
 ls -lh "$OUT_DIR"

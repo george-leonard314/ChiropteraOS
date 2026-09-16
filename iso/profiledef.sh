@@ -23,4 +23,8 @@ file_permissions=(
   ["/etc/polkit-1/rules.d"]="0:102:750"
   ["/root"]="0:0:750"
   ["/root/.gnupg"]="0:0:700"
+  # Staged from calamares/ by ci/build-iso.sh (calamares/stage)
+  ["/usr/bin/chiroptera-install"]="0:0:755"
+  ["/etc/calamares/scripts/chiroptera-live-cleanup"]="0:0:755"
+  ["/etc/calamares/scripts/chiroptera-user-dirs"]="0:0:755"
 )

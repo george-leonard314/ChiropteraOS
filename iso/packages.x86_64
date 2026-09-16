@@ -56,7 +56,13 @@ noctalia-greeter
 chiroptera-boot
 chiroptera-meta
 chiroptera-hwd
-# Installer
+# Installer. Its configuration is staged from calamares/ by ci/build-iso.sh.
+# BlackArch's calamares omits runtime tools cachyos-calamares pulled in:
+# rsync (unpackfs), gptfdisk, dmidecode, upower, qt6-imageformats.
 calamares
-chiroptera-calamares-config
 qt6-wayland
+rsync
+gptfdisk
+dmidecode
+upower
+qt6-imageformats
