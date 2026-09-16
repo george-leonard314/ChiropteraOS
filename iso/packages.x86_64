@@ -53,7 +53,7 @@ linux-headers
 # Desktop
 greetd
 noctalia-greeter
-chiroptera-themes
+chiroptera-boot
 chiroptera-meta
 chiroptera-hwd
 # Installer

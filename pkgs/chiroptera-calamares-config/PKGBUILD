@@ -1,7 +1,7 @@
 # Maintainer: George (ChiropteraOS)
 
 pkgname=chiroptera-calamares-config
-pkgver=0.1.3
+pkgver=0.1.4
 pkgrel=1
 pkgdesc='ChiropteraOS installer: Calamares settings, modules and branding'
 arch=('any')
@@ -9,7 +9,7 @@ url='https://github.com/george-leonard314/ChiropteraOS'
 license=('MIT')
 # BlackArch's calamares omits runtime tools cachyos-calamares pulled in:
 # rsync (unpackfs), gptfdisk, dmidecode, upower, qt6-imageformats.
-depends=('calamares' 'chiroptera-hwd' 'chiroptera-themes' 'qt6-wayland' 'sudo'
+depends=('calamares' 'chiroptera-hwd' 'chiroptera-boot' 'qt6-wayland' 'sudo'
          'rsync' 'gptfdisk' 'dmidecode' 'upower' 'qt6-imageformats')
 
 # The files live in this repository's calamares/ directory, two levels up.

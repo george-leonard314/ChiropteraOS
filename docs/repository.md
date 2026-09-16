@@ -16,13 +16,12 @@ repository has to carry it.
 | `pacseek` | any | Public GitHub tarball, vendored from the AUR |
 | `evdi-dkms` | x86_64 | Public GitHub tarball, vendored from the AUR |
 | `displaylink` | x86_64 | Synaptics download, vendored from the AUR — **proprietary** |
-| `chiroptera-shell` | x86_64 | Private repository, tag `v5.0.1-chiroptera1` |
+| `chiroptera-shell` | x86_64 | Private repository, tag `v5.0.1-chiroptera4` |
 | `chiroptera-dots` | any | Private repository, tag `v0.1.0` |
 | `chiroptera-meta` | any | This repository |
 | `chiroptera-hwd` | any | This repository |
-| `chiroptera-themes` | any | This repository |
+| `chiroptera-boot` | any | This repository |
 | `chiroptera-calamares-config` | any | This repository |
-| `chiroptera-zen-theme` | any | This repository |
 | `kmg` | x86_64 | Downloaded from the latest release of `george-leonard314/kmg`, whose own CI builds it |
 
 `evdi-dkms` and `displaylink` are what make DisplayLink docks work; the image

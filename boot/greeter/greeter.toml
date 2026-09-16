@@ -4,6 +4,6 @@
 
 # ChiropteraOS, not Hyprland: that session starts Hyprland without
 # chiroptera-session, which keeps DisplayLink's evdi cards out of
-# AQ_DRM_DEVICES. See themes/session/chiroptera-session.
+# AQ_DRM_DEVICES. See boot/session/chiroptera-session.
 [session]
 default = "ChiropteraOS"

@@ -17,11 +17,13 @@ _seed() {
 
 post_install() {
   _seed
+  # Replacing chiroptera-themes counts as a fresh install
+  _migrate_default_session
   echo '==> greetd should run: env NOCTALIA_GREETER_ASSETS_DIR=/usr/share/chiroptera/greeter/assets /usr/bin/noctalia-greeter-session'
   echo '==> GRUB theme: GRUB_THEME="/usr/share/grub/themes/darkmatter/theme.txt" in /etc/default/grub'
 }
 
-# 0.1.1 added the ChiropteraOS session. A greeter.toml still exactly as 0.1.0
+# chiroptera-themes 0.1.1 added the ChiropteraOS session. A greeter.toml still exactly as 0.1.0
 # seeded it moves its default there; one the administrator edited is left alone.
 _migrate_default_session() {
   local f=/var/lib/noctalia-greeter/greeter.toml

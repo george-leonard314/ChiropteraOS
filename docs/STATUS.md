@@ -29,7 +29,7 @@ suite and a real apply in a container run in CI. See `docs/hwd.md`.
 | 3 | Theme, logo and bar composition — largely done during step 2 |
 | 4 | Publishing: choose a host and wire up the `publish` job (build CI is done) |
 | 5 | Applied to the laptop; after-benchmarks wait on the flaky-TSC fix (`tsc=reliable`) |
-| 6 | Done bar CI: the ISO builds and installs end to end in QEMU (`iso/`, `calamares/`, `themes/`; see `docs/iso.md`). Hardware test and an ISO workflow remain |
+| 6 | Done bar CI: the ISO builds and installs end to end in QEMU (`iso/`, `calamares/`, `boot/`; see `docs/iso.md`). Hardware test and an ISO workflow remain |
 | 7 | The AI sidebar plugin |
 | 8 | Upstream sync tooling and the greeter rebrand |
 

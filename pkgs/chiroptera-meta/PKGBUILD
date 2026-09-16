@@ -1,7 +1,7 @@
 # Maintainer: George (ChiropteraOS)
 
 pkgname=chiroptera-meta
-pkgver=0.1.10
+pkgver=0.1.11
 pkgrel=1
 pkgdesc='Everything a ChiropteraOS desktop needs'
 arch=('any')
@@ -49,25 +49,30 @@ depends=(
   # Notes: KMG, the SiYuan rebrand released by github.com/george-leonard314/kmg,
   # bound to the notes special workspace
   'kmg'
-  # Zen Browser recolors live with the wallpaper when the installer's Browser page
-  # chose it; inert otherwise. From pkgs/chiroptera-zen-theme.
-  'chiroptera-zen-theme'
 )
 # firefox and code are deliberately not declared: no profile or configuration
 # is invested in either, so they are not part of the ChiropteraOS package set.
 optdepends=('superproductivity: todo'
+            'zen-browser-bin: the browser that follows the wallpaper palette'
             'noctalia-greeter: greetd login screen themed by the shell'
 )
 provides=('chiroptera-meta')
-# chiroptera-wifi-secrets 0.1.0 shipped the files below on its own; they live here now.
-replaces=('chiroptera-wifi-secrets')
-conflicts=('chiroptera-wifi-secrets')
-# The rest of the package is dependencies. The one thing it ships: eduroam and
-# other 802.1X passwords move from the keyring into NetworkManager, so resume
-# and RADIUS hiccups stop asking for them. Both files sit beside this PKGBUILD,
-# so bump pkgver whenever they change.
-source=('chiroptera-wifi-secrets' 'chiroptera-wifi-secrets.service')
-sha256sums=('SKIP' 'SKIP')
+# chiroptera-wifi-secrets 0.1.0 and chiroptera-zen-theme 0.1.0 shipped the
+# files below on their own; they live here now.
+replaces=('chiroptera-wifi-secrets' 'chiroptera-zen-theme')
+conflicts=('chiroptera-wifi-secrets' 'chiroptera-zen-theme')
+# Besides the dependencies, two small things ship here:
+# - eduroam and other 802.1X passwords move from the keyring into
+#   NetworkManager, so resume and RADIUS hiccups stop asking for them;
+# - Zen Browser follows the shell's wallpaper palette live, without a restart.
+#   zen-browser-bin comes from [cachyos], which the image's repositories lack,
+#   so it is only an optdepend; without Zen the files are inert. The palette
+#   CSS comes from the shell's zen-browser template, enabled in chiroptera-dots.
+# All files sit beside this PKGBUILD and change with this repository, so there
+# is no checksum to keep -- bump pkgver whenever they change.
+source=('chiroptera-wifi-secrets' 'chiroptera-wifi-secrets.service'
+        'autoconfig.js' 'chiroptera-zen.cfg')
+sha256sums=('SKIP' 'SKIP' 'SKIP' 'SKIP')
 
 package() {
     install -Dm755 "$srcdir/chiroptera-wifi-secrets" "$pkgdir/usr/lib/chiroptera/chiroptera-wifi-secrets"
@@ -78,4 +83,9 @@ package() {
     install -dm755 "$pkgdir/usr/lib/systemd/user/graphical-session.target.wants"
     ln -s ../chiroptera-wifi-secrets.service \
         "$pkgdir/usr/lib/systemd/user/graphical-session.target.wants/chiroptera-wifi-secrets.service"
+
+    # Gecko reads autoconfig only from the install directory. zen-browser-bin
+    # owns neither file, so its upgrades leave them in place.
+    install -Dm644 "$srcdir/autoconfig.js" "$pkgdir/opt/zen-browser-bin/defaults/pref/autoconfig.js"
+    install -Dm644 "$srcdir/chiroptera-zen.cfg" "$pkgdir/opt/zen-browser-bin/chiroptera-zen.cfg"
 }

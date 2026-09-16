@@ -97,13 +97,13 @@ now unmounts everything under the work directory first and deletes with
   the launcher as "Install ChiropteraOS", and `chiroptera-install` works from
   a terminal.
 - **Login:** greetd. Hyprland always starts through `chiroptera-session`
-  (from `chiroptera-themes`), a wrapper that sets `AQ_DRM_DEVICES` to the
+  (from `chiroptera-boot`), a wrapper that sets `AQ_DRM_DEVICES` to the
   real GPUs and leaves DisplayLink's evdi cards out of it. Without that, a
   machine with a dock attached at boot can have Hyprland pick a
   non-rendering evdi node as its primary device and show nothing at all on
   any output, with VT switching dead too. The live image logs straight into
   it; installed systems get `noctalia-greeter`, branded by
-  `chiroptera-themes`, whose default session "ChiropteraOS" runs it.
+  `chiroptera-boot`, whose default session "ChiropteraOS" runs it.
   Hyprland's own "Hyprland" session is still listed but skips the wrapper.
 
   The wrapper is live-only: `chiroptera-live-cleanup` rewrites
@@ -111,9 +111,9 @@ now unmounts everything under the work directory first and deletes with
   Hyprland through the greeter without it. The same guard belongs in
   `chiroptera-dots` (`hypr/hyprland/env.conf`) and is still owed.
 
-## Look: `chiroptera-themes`
+## Boot and login: `chiroptera-boot`
 
-`themes/` in this repository, packaged as `chiroptera-themes`:
+`boot/` in this repository, packaged as `chiroptera-boot`:
 
 - **GRUB:** the author's Dark Matter theme (VandalByte, GPL-3.0), installed
   to `/usr/share/grub/themes/darkmatter`. The installer's `grubcfg` sets
@@ -161,7 +161,7 @@ the created user. What that run exposed, all fixed here:
 - archiso ships no separate microcode images, so `unpackfs` must not copy
   them; mkinitcpio's `microcode` hook embeds them in the target initramfs.
 - The seeded greeter state must be world-readable: the greetd account often
-  does not exist yet when `chiroptera-themes` is installed, and an unreadable
+  does not exist yet when `chiroptera-boot` is installed, and an unreadable
   `greeter.toml` leaves the login screen showing a configuration error.
 - `chiroptera-hwd` runs twice: the first `pacman -Syu` can lose a package to
   a CachyOS mirror that is briefly out of sync, which aborts the upgrade. In
