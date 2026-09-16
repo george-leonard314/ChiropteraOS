@@ -1,7 +1,7 @@
 # Maintainer: George (ChiropteraOS)
 
 pkgname=chiroptera-meta
-pkgver=0.1.9
+pkgver=0.1.10
 pkgrel=1
 pkgdesc='Everything a ChiropteraOS desktop needs'
 arch=('any')
@@ -52,9 +52,6 @@ depends=(
   # Zen Browser recolors live with the wallpaper when the installer's Browser page
   # chose it; inert otherwise. From pkgs/chiroptera-zen-theme.
   'chiroptera-zen-theme'
-  # eduroam and other 802.1X passwords move from the keyring into NetworkManager,
-  # so resume and RADIUS hiccups stop asking for them. From pkgs/chiroptera-wifi-secrets.
-  'chiroptera-wifi-secrets'
 )
 # firefox and code are deliberately not declared: no profile or configuration
 # is invested in either, so they are not part of the ChiropteraOS package set.
@@ -62,3 +59,23 @@ optdepends=('superproductivity: todo'
             'noctalia-greeter: greetd login screen themed by the shell'
 )
 provides=('chiroptera-meta')
+# chiroptera-wifi-secrets 0.1.0 shipped the files below on its own; they live here now.
+replaces=('chiroptera-wifi-secrets')
+conflicts=('chiroptera-wifi-secrets')
+# The rest of the package is dependencies. The one thing it ships: eduroam and
+# other 802.1X passwords move from the keyring into NetworkManager, so resume
+# and RADIUS hiccups stop asking for them. Both files sit beside this PKGBUILD,
+# so bump pkgver whenever they change.
+source=('chiroptera-wifi-secrets' 'chiroptera-wifi-secrets.service')
+sha256sums=('SKIP' 'SKIP')
+
+package() {
+    install -Dm755 "$srcdir/chiroptera-wifi-secrets" "$pkgdir/usr/lib/chiroptera/chiroptera-wifi-secrets"
+    install -Dm644 "$srcdir/chiroptera-wifi-secrets.service" \
+        "$pkgdir/usr/lib/systemd/user/chiroptera-wifi-secrets.service"
+    # Enabled for every user by the package itself, so existing accounts get
+    # it without running systemctl.
+    install -dm755 "$pkgdir/usr/lib/systemd/user/graphical-session.target.wants"
+    ln -s ../chiroptera-wifi-secrets.service \
+        "$pkgdir/usr/lib/systemd/user/graphical-session.target.wants/chiroptera-wifi-secrets.service"
+}
