@@ -1,0 +1,4 @@
+# ChiropteraOS system-wide default applications. A user's own
+# ~/.config/mimeapps.list overrides any line here.
+[Default Applications]
+application/pdf=org.gnome.Papers.desktop

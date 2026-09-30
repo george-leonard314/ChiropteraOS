@@ -1,7 +1,7 @@
 # Maintainer: George (ChiropteraOS)
 
 pkgname=chiroptera-meta
-pkgver=0.1.11
+pkgver=0.1.12
 pkgrel=1
 pkgdesc='Everything a ChiropteraOS desktop needs'
 arch=('any')
@@ -31,9 +31,10 @@ depends=(
   # File manager and the pieces that make it useful: archives, thumbnails,
   # trash and mounting. Thunar's terminal is set to foot in chiroptera-dots.
   'thunar' 'thunar-archive-plugin' 'file-roller' 'tumbler' 'gvfs' 'gvfs-mtp'
-  # Image viewer and video player: without them, pictures open in GIMP or
-  # ImageMagick's display and videos in the browser or nothing at all
-  'loupe' 'celluloid'
+  # Image viewer, video player and PDF viewer: without them, pictures open in
+  # GIMP or ImageMagick's display, videos in the browser or nothing at all, and
+  # PDFs in GIMP. Papers is also made the PDF default below.
+  'loupe' 'celluloid' 'papers'
   # Documents, Pictures and the other home folders: the installer creates them
   # for the new account, and its user service keeps them for later ones
   'xdg-user-dirs'
@@ -61,18 +62,22 @@ provides=('chiroptera-meta')
 # files below on their own; they live here now.
 replaces=('chiroptera-wifi-secrets' 'chiroptera-zen-theme')
 conflicts=('chiroptera-wifi-secrets' 'chiroptera-zen-theme')
-# Besides the dependencies, two small things ship here:
+# Besides the dependencies, three small things ship here:
 # - eduroam and other 802.1X passwords move from the keyring into
 #   NetworkManager, so resume and RADIUS hiccups stop asking for them;
 # - Zen Browser follows the shell's wallpaper palette live, without a restart.
 #   zen-browser-bin comes from [cachyos], which the image's repositories lack,
 #   so it is only an optdepend; without Zen the files are inert. The palette
 #   CSS comes from the shell's zen-browser template, enabled in chiroptera-dots.
+# - PDFs open in Papers: installing it is not enough, because GIMP also claims
+#   application/pdf and can win. /etc/xdg/mimeapps.list sets the system
+#   default; a user's own ~/.config/mimeapps.list still overrides it.
 # All files sit beside this PKGBUILD and change with this repository, so there
 # is no checksum to keep -- bump pkgver whenever they change.
 source=('chiroptera-wifi-secrets' 'chiroptera-wifi-secrets.service'
-        'autoconfig.js' 'chiroptera-zen.cfg')
-sha256sums=('SKIP' 'SKIP' 'SKIP' 'SKIP')
+        'autoconfig.js' 'chiroptera-zen.cfg' 'mimeapps.list')
+sha256sums=('SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP')
+backup=('etc/xdg/mimeapps.list')
 
 package() {
     install -Dm755 "$srcdir/chiroptera-wifi-secrets" "$pkgdir/usr/lib/chiroptera/chiroptera-wifi-secrets"
@@ -88,4 +93,6 @@ package() {
     # owns neither file, so its upgrades leave them in place.
     install -Dm644 "$srcdir/autoconfig.js" "$pkgdir/opt/zen-browser-bin/defaults/pref/autoconfig.js"
     install -Dm644 "$srcdir/chiroptera-zen.cfg" "$pkgdir/opt/zen-browser-bin/chiroptera-zen.cfg"
+
+    install -Dm644 "$srcdir/mimeapps.list" "$pkgdir/etc/xdg/mimeapps.list"
 }
