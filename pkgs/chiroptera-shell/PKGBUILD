@@ -3,8 +3,8 @@
 
 pkgname=chiroptera-shell
 _srcname=chiroptera-shell
-pkgver=5.0.1.chiroptera4
-_tag=v5.0.1-chiroptera4
+pkgver=5.2.0.chiroptera1
+_tag=v5.2.0-chiroptera1
 pkgrel=1
 pkgdesc='Chiroptera Shell: the ChiropteraOS Wayland desktop shell (rebrand of Noctalia)'
 arch=('x86_64' 'aarch64')
@@ -15,7 +15,7 @@ depends=(
   'cairo' 'curl' 'fontconfig' 'freetype2' 'gcc-libs' 'git' 'glib2' 'glibc' 'jemalloc'
   'libglvnd' 'libical' 'libjxl' 'libpipewire' 'libqalculate' 'librsvg' 'libsecret'
   'libsndfile' 'libsodium' 'libwebp' 'libwireplumber' 'libxkbcommon' 'libxml2' 'md4c'
-  'pam' 'polkit' 'pango' 'sdbus-cpp' 'tomlplusplus' 'wayland'
+  'pam' 'polkit' 'pango' 'sdbus-cpp' 'sound-theme-freedesktop' 'tomlplusplus' 'wayland'
 )
 makedepends=('meson' 'ninja' 'nlohmann-json' 'pkgconf' 'stb' 'wayland-protocols')
 optdepends=('noctalia-greeter: greetd login screen themed by the shell'
