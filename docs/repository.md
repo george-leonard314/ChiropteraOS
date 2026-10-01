@@ -21,7 +21,6 @@ repository has to carry it.
 | `chiroptera-meta` | any | This repository |
 | `chiroptera-hwd` | any | This repository |
 | `chiroptera-boot` | any | This repository |
-| `kmg` | x86_64 | Downloaded from the latest release of `george-leonard314/kmg`, whose own CI builds it |
 
 `evdi-dkms` and `displaylink` are what make DisplayLink docks work; the image
 installs both. Two things about them are unlike the rest:
@@ -71,11 +70,8 @@ and `chiroptera-meta` build with `--nodeps`: they have no `build()` at all, so
 installing their runtime dependencies would pull hundreds of megabytes into the
 builder and prove nothing. The smoke test proves what matters instead.
 
-`kmg` is not built here. The kmg repository keeps its PKGBUILD in
-`kmg/packaging/arch`, and its CI attaches the package to every `v*-kmg*`
-release; this build downloads the latest one and checks its sha256. A new KMG
-release reaches the repository on the next run, so start one by hand after
-releasing: `gh workflow run packages.yml`.
+KMG is not in this repository: it is private, and each install updates itself
+from George's own server (kmg/docs/updates.md in the kmg repository).
 
 ### Verification
 

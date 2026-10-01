@@ -127,10 +127,8 @@ jobs:
         env:
           FORCE_REBUILD: ${{ inputs.force_rebuild && '1' || '0' }}
           PACKAGE_SIGNING_KEY: ${{ secrets.PACKAGE_SIGNING_KEY }}
-          # kmg is downloaded from its repository's latest release.
-          GITHUB_TOKEN: ${{ github.token }}
         run: |
-          sudo -u builder --preserve-env=FORCE_REBUILD,PACKAGE_SIGNING_KEY,GITHUB_TOKEN \
+          sudo -u builder --preserve-env=FORCE_REBUILD,PACKAGE_SIGNING_KEY \
             ./ci/build-repo.sh
 
       - name: Prove the repository is installable

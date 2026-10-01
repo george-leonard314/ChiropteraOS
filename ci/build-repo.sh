@@ -17,7 +17,7 @@ FORCE_REBUILD=${FORCE_REBUILD:-0}
 
 # Dependencies before dependents. Overridable so a local run can exercise the
 # script without recompiling the shell.
-read -r -a packages <<<"${PACKAGES:-app2unit pacseek evdi-dkms displaylink chiroptera-shell chiroptera-dots chiroptera-meta chiroptera-hwd chiroptera-boot kmg}"
+read -r -a packages <<<"${PACKAGES:-app2unit pacseek evdi-dkms displaylink chiroptera-shell chiroptera-dots chiroptera-meta chiroptera-hwd chiroptera-boot}"
 
 # Dependency handling, per package:
 #
@@ -49,13 +49,6 @@ declare -A extra_flags=(
     [chiroptera-meta]="--nodeps"
     [chiroptera-hwd]="--nodeps"
     [chiroptera-boot]="--nodeps"
-)
-
-# Packages their own repositories build and attach to GitHub releases. They
-# are downloaded from the latest release rather than built here; the PKGBUILD
-# and its history stay in that repository.
-declare -A released=(
-    [kmg]="george-leonard314/kmg"
 )
 
 mkdir -p "$REPO_DIR"
@@ -153,38 +146,6 @@ build_one() {
     (cd "$dir" && PKGDEST="$REPO_DIR" makepkg "${flags[@]}")
 }
 
-fetch_released() {
-    local pkg=$1 repo=${released[$1]}
-    local -a auth=()
-    # Unauthenticated API calls share a 60-an-hour limit per runner address.
-    [[ -n ${GITHUB_TOKEN:-} ]] && auth=(-H "Authorization: Bearer $GITHUB_TOKEN")
-
-    local asset name url digest
-    asset=$(curl -fsSL "${auth[@]}" "https://api.github.com/repos/$repo/releases/latest" \
-        | jq -r --arg pkg "$pkg" '.assets[]
-            | select(.name | test("^" + $pkg + "-[^-]+-[^-]+-[^-]+\\.pkg\\.tar\\.zst$"))
-            | [.name, .browser_download_url, (.digest // "")] | @tsv' | head -1)
-    IFS=$'\t' read -r name url digest <<<"$asset"
-    if [[ -z ${name:-} ]]; then
-        echo "$pkg: the latest release of $repo has no package" >&2
-        return 1
-    fi
-
-    if [[ -f $REPO_DIR/$name && $FORCE_REBUILD -ne 1 ]]; then
-        echo "$pkg: $name already fetched, skipping"
-        return 0
-    fi
-    echo "$pkg: fetching $name from $repo"
-    curl -fsSL -o "$REPO_DIR/$name.part" "$url"
-    if [[ $digest == sha256:* ]] \
-        && [[ $(sha256sum "$REPO_DIR/$name.part" | cut -d' ' -f1) != "${digest#sha256:}" ]]; then
-        rm -f "$REPO_DIR/$name.part"
-        echo "$pkg: $name does not match the release's sha256" >&2
-        return 1
-    fi
-    mv "$REPO_DIR/$name.part" "$REPO_DIR/$name"
-}
-
 prune_old_versions() {
     local -A versions_of=()
     local f base name ver rel
@@ -271,11 +232,7 @@ build_database() {
 }
 
 for pkg in "${packages[@]}"; do
-    if [[ -n ${released[$pkg]:-} ]]; then
-        fetch_released "$pkg"
-    else
-        build_one "$pkg"
-    fi
+    build_one "$pkg"
 done
 
 prune_old_versions

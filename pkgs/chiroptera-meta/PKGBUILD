@@ -1,7 +1,7 @@
 # Maintainer: George (ChiropteraOS)
 
 pkgname=chiroptera-meta
-pkgver=0.1.12
+pkgver=0.1.13
 pkgrel=1
 pkgdesc='Everything a ChiropteraOS desktop needs'
 arch=('any')
@@ -47,9 +47,8 @@ depends=(
   'ttf-material-symbols-variable'
   # Sound effects used by the fish error hook
   'sound-theme-freedesktop' 'libpulse'
-  # Notes: KMG, the SiYuan rebrand released by github.com/george-leonard314/kmg,
-  # bound to the notes special workspace
-  'kmg'
+  # KMG (notes) is not part of ChiropteraOS: it is private, and updates itself
+  # from George's own server.
 )
 # firefox and code are deliberately not declared: no profile or configuration
 # is invested in either, so they are not part of the ChiropteraOS package set.
