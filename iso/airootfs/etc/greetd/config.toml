@@ -9,8 +9,9 @@ user = "greeter"
 
 [initial_session]
 # Not start-hyprland directly: the wrapper works out which DRM devices to
-# render on and keeps DisplayLink's evdi cards out of that list, which would
-# otherwise leave every output black on a machine with a dock attached at boot.
+# render on and puts the real GPUs ahead of DisplayLink's evdi cards, so a
+# dock attached at boot cannot become the primary device and leave every
+# output black.
 # See the comment in the script itself.
 command = "/usr/bin/chiroptera-session"
 user = "live"

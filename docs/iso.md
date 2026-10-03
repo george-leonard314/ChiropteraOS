@@ -99,10 +99,11 @@ now unmounts everything under the work directory first and deletes with
   a terminal.
 - **Login:** greetd. Hyprland always starts through `chiroptera-session`
   (from `chiroptera-boot`), a wrapper that sets `AQ_DRM_DEVICES` to the
-  real GPUs and leaves DisplayLink's evdi cards out of it. Without that, a
+  real GPUs first and DisplayLink's evdi cards after them. Without that, a
   machine with a dock attached at boot can have Hyprland pick a
   non-rendering evdi node as its primary device and show nothing at all on
-  any output, with VT switching dead too. The live image logs straight into
+  any output, with VT switching dead too. The evdi cards still have to be in
+  the list, or the dock's screens stay dark. The live image logs straight into
   it; installed systems get `noctalia-greeter`, branded by
   `chiroptera-boot`, whose default session "ChiropteraOS" runs it.
   Hyprland's own "Hyprland" session is still listed but skips the wrapper.

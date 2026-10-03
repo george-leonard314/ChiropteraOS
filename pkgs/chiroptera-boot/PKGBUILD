@@ -1,7 +1,7 @@
 # Maintainer: George (ChiropteraOS)
 
 pkgname=chiroptera-boot
-pkgver=0.1.2
+pkgver=0.1.3
 pkgrel=1
 pkgdesc='ChiropteraOS boot and login: Dark Matter GRUB theme, branded Noctalia greeter, the ChiropteraOS session'
 arch=('any')
@@ -35,8 +35,9 @@ package() {
   install -Dm644 "$src/greeter/chiroptera-greeter.conf" \
     "$pkgdir/usr/lib/sysusers.d/chiroptera-greeter.conf"
 
-  # The "ChiropteraOS" session: Hyprland with DisplayLink's evdi cards kept out
-  # of AQ_DRM_DEVICES. greeter.toml makes it the login screen's default.
+  # The "ChiropteraOS" session: Hyprland with the real GPUs ahead of
+  # DisplayLink's evdi cards in AQ_DRM_DEVICES. greeter.toml makes it the
+  # login screen's default.
   install -Dm755 "$src/session/chiroptera-session" "$pkgdir/usr/bin/chiroptera-session"
   install -Dm644 "$src/session/chiroptera.desktop" \
     "$pkgdir/usr/share/wayland-sessions/chiroptera.desktop"

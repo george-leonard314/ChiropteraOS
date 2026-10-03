@@ -3,7 +3,7 @@
 # left to sync.toml so the shell's Sync can change it.
 
 # ChiropteraOS, not Hyprland: that session starts Hyprland without
-# chiroptera-session, which keeps DisplayLink's evdi cards out of
-# AQ_DRM_DEVICES. See boot/session/chiroptera-session.
+# chiroptera-session, which puts the real GPUs ahead of DisplayLink's evdi
+# cards in AQ_DRM_DEVICES. See boot/session/chiroptera-session.
 [session]
 default = "ChiropteraOS"
