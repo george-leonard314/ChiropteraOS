@@ -21,6 +21,36 @@ lang=$(. /etc/locale.conf 2>/dev/null; echo "${LANG:-C.UTF-8}")
 
 runuser -u "$user" -- env HOME="$home" LANG="$lang" xdg-user-dirs-update
 
+# Thunar's Places pane lists only ~/.config/gtk-3.0/bookmarks, which nothing
+# else creates, so pin the folders just made. The file needs absolute file://
+# URIs, and the localized names need percent-encoding.
+uri_encode() {
+    local LC_ALL=C s=$1 out= c i
+    for ((i = 0; i < ${#s}; i++)); do
+        c=${s:i:1}
+        case $c in
+            [a-zA-Z0-9/._~-]) out+=$c ;;
+            *) printf -v c '%%%02X' "'$c"; out+=$c ;;
+        esac
+    done
+    printf '%s' "$out"
+}
+bookmarks=$home/.config/gtk-3.0/bookmarks
+if [[ ! -e $bookmarks && -r $home/.config/user-dirs.dirs ]]; then
+    lines=
+    for key in DOCUMENTS DOWNLOAD PICTURES MUSIC VIDEOS PROJECTS; do
+        dir=$(sed -n "s/^XDG_${key}_DIR=\"\(.*\)\"\$/\1/p" "$home/.config/user-dirs.dirs")
+        dir=${dir/#\$HOME/$home}; dir=${dir%/}
+        # A folder xdg-user-dirs disabled points at $HOME itself; skip it.
+        [[ -n $dir && $dir != "$home" && -d $dir ]] || continue
+        lines+="file://$(uri_encode "$dir") ${dir##*/}"$'\n'
+    done
+    if [[ -n $lines ]]; then
+        runuser -u "$user" -- mkdir -p "$home/.config/gtk-3.0"
+        printf '%s' "$lines" | runuser -u "$user" -- tee "$bookmarks" >/dev/null
+    fi
+fi
+
 # The package's user service recreates missing folders before every graphical
 # session, for this account and any added later. It ships disabled.
 systemctl --global enable xdg-user-dirs.service

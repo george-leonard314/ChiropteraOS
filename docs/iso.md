@@ -84,8 +84,10 @@ now unmounts everything under the work directory first and deletes with
   created, `shellprocess@userdirs` runs `chiroptera-user-dirs`, which runs
   `xdg-user-dirs-update` as that user: Desktop, Documents, Downloads, Music,
   Pictures, Projects, Public, Templates and Videos, named in the system
-  locale. It also enables `xdg-user-dirs.service` globally, so accounts
-  added later get them at their first login.
+  locale. It pins Documents, Downloads, Pictures, Music, Videos and Projects
+  to Thunar's Places pane (`~/.config/gtk-3.0/bookmarks`). It also enables
+  `xdg-user-dirs.service` globally, so accounts added later get the folders at
+  their first login (but not the Places pins).
 - **The desktop is in the image** (`chiroptera-meta`): the shell, the
   dotfiles, Thunar with archive, thumbnail, trash and mounting support,
   Loupe for images, Celluloid for video, Papers for PDFs (the system default for them, so they do not open in GIMP), nwg-displays and nano among them. `chiroptera-apps`, from
