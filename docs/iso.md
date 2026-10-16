@@ -138,11 +138,14 @@ now unmounts everything under the work directory first and deletes with
   Machines installed before `chiroptera-greeter` ran the greeter package it
   replaces (`provides`/`conflicts`/`replaces`; the old name is in
   `legacy/names.sh`). On that upgrade `chiroptera-greeter.install` moves the
-  old state directory to `/var/lib/chiroptera-greeter`, rewrites
+  old state directory to `/var/lib/chiroptera-greeter` and points the synced
+  wallpaper paths inside `sync.toml` and `greeter.toml` at it, rewrites
   `/etc/greetd/config.toml` to start `chiroptera-greeter-session` (keeping the
-  old file as `config.toml.pre-chiroptera-greeter`), and removes the old
-  passwordless-sync Polkit rule, whose action no longer exists; re-enable it
-  with `sudo chiroptera-greeter passwordless-sync enable USER`.
+  old file as `config.toml.pre-chiroptera-greeter`), and re-authorizes the
+  accounts listed in the old passwordless-sync Polkit rule for
+  chiroptera-greeter's action before removing that rule, whose action no
+  longer exists. For any account it could not carry over it prints
+  `sudo chiroptera-greeter passwordless-sync enable USER`.
 
 ## Calamares configuration
 

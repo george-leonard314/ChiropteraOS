@@ -17,6 +17,13 @@ _migrate_state() {
   fi
   mv "$old" "$_new_state"
   echo "==> moved the login screen's settings from $old to $_new_state"
+  # The shell's Sync writes absolute wallpaper paths under the state directory,
+  # so point them at the new one or the login screen draws without them.
+  local f
+  for f in sync.toml greeter.toml appearance.json; do
+    [[ -f $_new_state/$f ]] && sed -i "s|$old/|$_new_state/|g" "$_new_state/$f"
+  done
+  return 0
 }
 
 # greetd runs whatever command config.toml names. The old session wrapper is
