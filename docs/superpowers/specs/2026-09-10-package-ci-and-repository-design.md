@@ -21,8 +21,8 @@ from the official Arch repositories:
 | `chiroptera-dots` | any | Private `git+https`, tag `v0.1.0` |
 | `chiroptera-meta` | any | This repository |
 
-x86_64 only. The `aarch64` line in the shell PKGBUILD is inherited from
-upstream Noctalia and is not a target the author builds or tests.
+x86_64 only. The `aarch64` line in the shell PKGBUILD is not a target the
+author builds or tests.
 
 ## Architecture
 

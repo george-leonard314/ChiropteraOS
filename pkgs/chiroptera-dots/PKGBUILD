@@ -77,5 +77,6 @@ package() {
   install -Dm644 -t "$pkgdir/usr/share/chiroptera" packages/apps.txt packages/apps-blackarch.txt
   install -Dm755 install.sh               "$pkgdir/usr/bin/chiroptera-dots"
   install -Dm644 README.md  "$pkgdir/usr/share/doc/$pkgname/README.md"
-  install -Dm644 CREDITS.md "$pkgdir/usr/share/doc/$pkgname/CREDITS.md"
+  # CREDITS after 0.1.17, CREDITS.md up to it.
+  install -Dm644 -t "$pkgdir/usr/share/doc/$pkgname" CREDITS*
 }

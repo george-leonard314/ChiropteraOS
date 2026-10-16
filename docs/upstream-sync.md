@@ -1,10 +1,11 @@
 # Upstream sync ritual
 
-`chiroptera-shell` is Noctalia with the rename transform
-(`chiroptera/rename.sh`) and a few Chiroptera commits on top: the plugin-API
-alias, the bat icon, the default wallpaper, the README credit, and
-`chiroptera <name>` running `chiroptera-<name>`. Syncing means: apply the same
-transform to upstream's new tree on a branch, then merge that.
+`chiroptera-shell` tracks its upstream as the `upstream` remote. On top of
+upstream's tree it carries the rename transform (`chiroptera/rename.sh`) and
+the Chiroptera commits: the plugin-API alias, the bat icon, the default
+wallpaper, our own documentation, and `chiroptera <name>` running
+`chiroptera-<name>`. Syncing means: apply the same transform to upstream's new
+tree on a branch, then merge that.
 
 Expect many conflicts: every upstream edit to a line that contained the old
 name is a both-sides-changed hunk (main renamed it, the sync branch renamed it
@@ -20,6 +21,18 @@ each has a fixed answer:
   with `git rm <file>`, unless it is one of ours (under `chiroptera/`, or
   `tests/plugin_api_alias_test.cpp`).
 - Anything else: read it; it is new.
+
+Documentation never conflicts: the transform replaces `README.md`,
+`BUILDING.md`, `PACKAGING.md` and `CONTRIBUTING.md` with main's, deletes any
+other top-level `.md` upstream ships, and moves upstream's `CREDITS.md` to the
+plain-text `CREDITS`, so no `.md` in the repository names upstream (the check
+fails if one does). Upstream's own changes to those four files therefore never
+arrive by merge; read them and carry over what matters, usually new build or
+runtime dependencies:
+
+```sh
+git diff "$(cut -d' ' -f2 .upstream-sync)" "$new" -- BUILDING.md PACKAGING.md CONTRIBUTING.md
+```
 
 `chiroptera/check-rename.sh` and the `plugin_api_alias` test prove the
 Chiroptera hunks survived.
@@ -71,7 +84,17 @@ Tag `v<upstream version>-chiroptera<N>` (N restarts at 1 when the upstream
 version changes), bump `pkgver` and `_tag` in
 `ChiropteraOS/pkgs/chiroptera-shell/PKGBUILD` (`pkgver` is the tag with the
 leading `v` dropped and `-` replaced by `.`; `v5.2.0-chiroptera1` becomes
-`5.2.0.chiroptera1`), and check upstream's `PACKAGING.md` for new runtime
-dependencies. Push main and the new tag by name (not `--tags`: the upstream
-remote's tags are in the local repository too), push ChiropteraOS so CI
-rebuilds, install, and run the laptop checks from the step 1 plan, Task 6.
+`5.2.0.chiroptera1`), and add any new runtime dependency found in the
+documentation diff above. Push main and the new tag by name (not `--tags`: the
+upstream remote's tags are in the local repository too), push ChiropteraOS so
+CI rebuilds, and install. Then check the laptop:
+
+```sh
+pkill -x chiroptera; chiroptera --daemon
+hyprctl layers | grep -o 'namespace: chiroptera-[a-z-]*' | sort -u   # bar, panel, wallpaper
+chiroptera --version
+chiroptera msg --help | head -2
+```
+
+and by hand: tap Super (launcher opens), Super+period (settings opens), a
+special-workspace key (the app opens in it).

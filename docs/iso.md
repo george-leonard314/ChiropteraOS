@@ -31,7 +31,7 @@ now unmounts everything under the work directory first and deletes with
 
 - **The live image is plain x86-64 Arch** with the stock `linux` kernel, so
   it boots in virtual machines and on CPUs without AVX2. Only what Arch lacks
-  (the Noctalia greeter) comes from `[cachyos]`, which sits after Arch's
+  (the login screen's greeter) comes from `[cachyos]`, which sits after Arch's
   repositories in the build's `pacman.conf`. Calamares comes from
   `[blackarch]`, last: CachyOS's `cachyos-calamares` is linked against
   Boost 1.91, which both Arch and CachyOS have replaced with 1.92, so it
@@ -104,8 +104,8 @@ now unmounts everything under the work directory first and deletes with
   non-rendering evdi node as its primary device and show nothing at all on
   any output, with VT switching dead too. The evdi cards still have to be in
   the list, or the dock's screens stay dark. The live image logs straight into
-  it; installed systems get `noctalia-greeter`, branded by
-  `chiroptera-boot`, whose default session "ChiropteraOS" runs it.
+  it; installed systems get the greeter, branded by `chiroptera-boot`,
+  whose default session "ChiropteraOS" runs it.
   Hyprland's own "Hyprland" session is still listed but skips the wrapper.
 
   The wrapper is live-only: `chiroptera-live-cleanup` rewrites
@@ -120,12 +120,14 @@ now unmounts everything under the work directory first and deletes with
 - **GRUB:** the author's Dark Matter theme (VandalByte, GPL-3.0), installed
   to `/usr/share/grub/themes/darkmatter`. The installer's `grubcfg` sets
   `GRUB_THEME` to it.
-- **Login screen:** `noctalia-greeter` with the bat logo. greetd starts it
-  with `NOCTALIA_GREETER_ASSETS_DIR=/usr/share/chiroptera/greeter/assets`,
-  a bundle holding the bat as `noctalia.svg` plus the greeter's own icon
-  font. On first install the package seeds `/var/lib/noctalia-greeter/`
-  with `sync.toml` (the Chiroptera palette and wallpaper) and `greeter.toml`
-  (default session Hyprland). Appearance lives in `sync.toml` on purpose:
+- **Login screen:** the greeter package `chiroptera-boot` depends on, with
+  the bat logo. greetd starts it with its assets directory set to
+  `/usr/share/chiroptera/greeter/assets`, a bundle holding the bat under the
+  logo file name the greeter looks for plus the greeter's own icon font (see
+  `pkgs/chiroptera-boot/PKGBUILD`). On first install the package seeds the
+  greeter's state directory under `/var/lib/` with `sync.toml` (the
+  Chiroptera palette and wallpaper) and `greeter.toml` (default session
+  Hyprland). Appearance lives in `sync.toml` on purpose:
   the shell's **Settings -> Security -> Greeter -> Sync Now** writes there,
   and a palette in `greeter.toml` would override it for good.
 

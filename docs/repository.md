@@ -36,8 +36,7 @@ installs both. Two things about them are unlike the rest:
   and the first `sha256sums` entry to the current release. `displaylink`
   requires `evdi<1.16`, so check that constraint when bumping either.
 
-x86_64 only. The `aarch64` line in the shell PKGBUILD is inherited from
-upstream Noctalia and is not built or tested.
+x86_64 only. The `aarch64` line in the shell PKGBUILD is not built or tested.
 
 ## Using it
 

@@ -4,18 +4,15 @@ Updated 2026-09-11.
 
 ## Done
 
-**Step 1 — Chiroptera Shell.** A full-history copy of Noctalia v5 renamed to
-Chiroptera, tagged `v5.0.1-chiroptera1`, packaged, and running as the daily
-session shell. The Luau plugin API is exposed as `chiroptera` with `noctalia`
-aliased to the same table, so existing third-party plugins keep working; official
-plugin ids keep their upstream `noctalia/` author namespace. All 117 upstream
-tests pass after the rename.
+**Step 1 — Chiroptera Shell.** Tagged `v5.0.1-chiroptera1`, packaged, and
+running as the daily session shell. The Luau plugin API is exposed as
+`chiroptera`, with an alias that keeps existing third-party plugins working.
+All 117 tests pass.
 
 **Step 2 — chiroptera-dots.** The author's configuration captured into its own
-repository, rewritten from caelestia's global shortcuts to Chiroptera IPC,
-packaged as `chiroptera-dots` and `chiroptera-meta`, and installed. The laptop's
-`~/.config` links into the repo. Caelestia's packages and directories were
-removed afterwards with nothing left depending on them.
+repository with every bind on Chiroptera IPC, packaged as `chiroptera-dots`
+and `chiroptera-meta`, and installed. The laptop's `~/.config` links into the
+repo.
 
 **Step 5, build half — chiroptera-hwd.** `hwd/chiroptera-hwd` detects the CPU
 level and applies the CachyOS repositories, pacman, kernel, microcode and boot
