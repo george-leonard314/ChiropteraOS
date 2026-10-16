@@ -30,15 +30,33 @@ _migrate_greetd() {
   echo "==> $f now starts chiroptera-greeter (the old file is $f.pre-chiroptera-greeter)"
 }
 
-# The old rule authorizes a Polkit action that no longer exists. Enabling
-# passwordless sync is the administrator's choice per account, so it is not
-# re-enabled here.
+# The old rule authorizes a Polkit action that no longer exists, for the
+# accounts its CLI recorded on the metadata line:
+#   // metadata: {"format": 1, "helper": "...", "users": ["alice", "bob"]}
+# Authorize the same accounts for chiroptera-greeter's action, then drop the
+# old rule, so sync from the shell stays passwordless where it was.
 _migrate_sync_rule() {
   local rule=/etc/polkit-1/rules.d/$LEGACY_GREETER_SYNC_RULE
   [[ -e $rule ]] || return 0
+  local list user users=() failed=()
+  list=$(sed -n 's|^// metadata: .*"users": *\[\([^]]*\)\].*|\1|p' "$rule" | head -n 1)
+  IFS=, read -r -a users <<<"$list"
+  for user in "${users[@]}"; do
+    user=${user//[\" ]/}
+    [[ -n $user ]] || continue
+    if [[ $user =~ ^[a-z_][a-z0-9_.-]*\$?$ ]] \
+        && /usr/bin/chiroptera-greeter passwordless-sync enable "$user" >/dev/null 2>&1; then
+      echo "==> passwordless sync from the shell stays enabled for $user"
+    else
+      failed+=("$user")
+    fi
+  done
   rm -f "$rule"
-  echo "==> removed $rule; to sync from the shell without a password again:"
-  echo "    sudo chiroptera-greeter passwordless-sync enable USER"
+  echo "==> removed the old login screen's rule $rule"
+  if ((${#failed[@]} > 0)); then
+    echo "==> could not carry passwordless sync over for: ${failed[*]}"
+    echo "    to enable it again: sudo chiroptera-greeter passwordless-sync enable USER"
+  fi
 }
 
 _migrate() {

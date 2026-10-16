@@ -14,6 +14,9 @@
 # shellcheck shell=bash disable=SC2034
 
 LEGACY_NAME=noctalia
+# Its stem, which inflected forms in other languages share ("…Noctalie",
+# "…Noctaliában"): what ci/check-names.sh looks for.
+LEGACY_NAME_STEM=${LEGACY_NAME%a}
 
 # The greeter package chiroptera-greeter replaces. Its state directory was
 # /var/lib/$LEGACY_GREETER, its session wrapper /usr/bin/$LEGACY_GREETER-session.

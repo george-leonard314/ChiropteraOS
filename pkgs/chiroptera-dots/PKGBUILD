@@ -8,7 +8,8 @@ pkgrel=1
 pkgdesc='ChiropteraOS dotfiles: Hyprland, Chiroptera Shell, fish, foot, fastfetch'
 arch=('any')
 url='https://github.com/george-leonard314/chiroptera-dots'
-license=('GPL-3.0-only')
+# The vendored shell plugins and the zen-browser template are MIT.
+license=('GPL-3.0-only' 'MIT')
 makedepends=('librsvg')
 # ttf-hack-nerd: foot, GTK, fontconfig and the Hyprland group bar all name Hack;
 # without it foot falls back to proportional Noto Sans and every cell is too wide.
@@ -75,6 +76,23 @@ package() {
   install -Dm755 bin/chiroptera-apps      "$pkgdir/usr/bin/chiroptera-apps"
   install -Dm755 bin/chiroptera-blackarch "$pkgdir/usr/bin/chiroptera-blackarch"
   install -Dm644 -t "$pkgdir/usr/share/chiroptera" packages/apps.txt packages/apps-blackarch.txt
+  # The shell plugins config.toml enables: the installer copies them from
+  # /usr/share, and new accounts get them in the shell's local plugin source.
+  # Nothing fetches them from an online catalog.
+  if [[ -d share/chiroptera/plugins ]]; then
+    install -dm755 "$pkgdir/usr/share/chiroptera/plugins" \
+                   "$pkgdir/etc/skel/.local/share/chiroptera/plugins"
+    local plugin
+    for plugin in share/chiroptera/plugins/*/; do
+      plugin=${plugin%/}
+      cp -a "$plugin" "$pkgdir/usr/share/chiroptera/plugins/"
+      cp -a "$plugin" "$pkgdir/etc/skel/.local/share/chiroptera/plugins/"
+      install -Dm644 "$plugin/LICENSE" \
+        "$pkgdir/usr/share/licenses/$pkgname/plugins/${plugin##*/}/LICENSE"
+    done
+    install -Dm644 config/chiroptera/templates/zen-browser/LICENSE \
+      "$pkgdir/usr/share/licenses/$pkgname/zen-browser-template/LICENSE"
+  fi
   install -Dm755 install.sh               "$pkgdir/usr/bin/chiroptera-dots"
   install -Dm644 README.md  "$pkgdir/usr/share/doc/$pkgname/README.md"
   # CREDITS after 0.1.17, CREDITS.md up to it.

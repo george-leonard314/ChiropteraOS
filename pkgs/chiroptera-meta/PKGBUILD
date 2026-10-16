@@ -73,7 +73,7 @@ conflicts=('chiroptera-wifi-secrets' 'chiroptera-zen-theme')
 # - Zen Browser follows the shell's wallpaper palette live, without a restart.
 #   zen-browser-bin comes from [cachyos], which the image's repositories lack,
 #   so it is only an optdepend; without Zen the files are inert. The palette
-#   CSS comes from the shell's zen-browser template, enabled in chiroptera-dots.
+#   CSS comes from the zen-browser template chiroptera-dots ships and enables.
 # - PDFs open in Papers: installing it is not enough, because GIMP also claims
 #   application/pdf and can win. /etc/xdg/mimeapps.list sets the system
 #   default; a user's own ~/.config/mimeapps.list still overrides it.

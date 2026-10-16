@@ -5,6 +5,7 @@
 # ignored ones are not.
 #
 # The name itself is read from legacy/names.sh, so this script never spells it.
+# It looks for the name's stem, so inflected forms in other languages fail too.
 
 set -euo pipefail
 
@@ -16,12 +17,12 @@ cd "$repo_root"
 
 status=0
 
-if hits=$(git grep --untracked -n -i -e "$LEGACY_NAME" -- . ':!legacy/names.sh'); then
+if hits=$(git grep --untracked -n -i -e "$LEGACY_NAME_STEM" -- . ':!legacy/names.sh'); then
     printf 'check-names: the old name appears outside legacy/names.sh:\n%s\n' "$hits" >&2
     status=1
 fi
 
-if names=$(git ls-files --cached --others --exclude-standard | grep -i -e "$LEGACY_NAME"); then
+if names=$(git ls-files --cached --others --exclude-standard | grep -i -e "$LEGACY_NAME_STEM"); then
     printf 'check-names: file names carry the old name:\n%s\n' "$names" >&2
     status=1
 fi

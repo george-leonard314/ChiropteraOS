@@ -20,7 +20,8 @@ depends=(
   'wlroots0.20'
 )
 makedepends=('meson' 'ninja' 'nlohmann-json' 'pkgconf' 'stb' 'wayland-protocols')
-optdepends=('polkit: wallpaper and palette sync from Chiroptera Shell'
+optdepends=('chiroptera-shell: wallpaper and palette sync from the shell'
+            'polkit: wallpaper and palette sync from Chiroptera Shell'
             'xorg-xinit: X11 sessions')
 install=chiroptera-greeter.install
 # An installed system with the old greeter swaps it for this one on upgrade;
@@ -48,5 +49,8 @@ package() {
     "${pkgdir}/usr/share/chiroptera-greeter/legacy-names.sh"
 
   install -Dm644 "${_srcname}/greeter/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  # Wuffs is compiled in; its notices ship with the binary.
+  install -Dm644 -t "${pkgdir}/usr/share/licenses/${pkgname}/wuffs" \
+    "${_srcname}"/greeter/third_party/wuffs/LICENSE-{APACHE,MIT}
   install -Dm644 "${_srcname}/greeter/README.md" "${pkgdir}/usr/share/doc/${pkgname}/README.md"
 }
