@@ -30,7 +30,7 @@ cat > /etc/greetd/config.toml <<'GREETD'
 vt = 1
 
 [default_session]
-command = "env NOCTALIA_GREETER_ASSETS_DIR=/usr/share/chiroptera/greeter/assets /usr/bin/noctalia-greeter-session"
+command = "env CHIROPTERA_GREETER_ASSETS_DIR=/usr/share/chiroptera/greeter/assets /usr/bin/chiroptera-greeter-session"
 user = "greeter"
 GREETD
 

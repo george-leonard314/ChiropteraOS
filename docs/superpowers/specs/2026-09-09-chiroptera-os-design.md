@@ -28,42 +28,41 @@ live window thumbnails (Hyprland's own overview covers it).
 
 | Question | Decision |
 |---|---|
-| Shell | Chiroptera Shell (C++, MIT), with full history and an `upstream` git remote. |
+| Shell | Chiroptera Shell (C++, MIT), the author's own, with full history. |
 | Naming | Everything is `chiroptera`: binary, config and state dirs, IPC, D-Bus names, layer namespaces, env vars, UI strings, docs. |
 | Plugin API | `chiroptera.*` is the Luau global; an alias keeps existing third-party plugins working. |
 | Bar layout | Horizontal top bar, composed from widgets: a bar configuration plus theme, not code. |
 | Panels | Right sidebar: the built-in control center. Left AI sidebar: a Chiroptera Luau panel plugin. Workspace overview: dropped (see non-goals). |
 | ISO experience | Live desktop with Chiroptera Shell running and an install button. |
 | Installer | Calamares. |
-| Login screen | A greetd greeter consumed as-is for now, branded by `chiroptera-boot`; a full rebrand is a later step. |
+| Login screen | `chiroptera-greeter`, built from `greeter/` in chiroptera-shell, branded by `chiroptera-boot`. |
 | Package delivery | Signed pacman repo. GitHub Pages now, own Gitea Arch registry later. |
 | Hardware target | Generic with hardware detection. |
 | Repo layout | Three repos: chiroptera-shell, chiroptera-dots (the author's own dotfiles), ChiropteraOS. |
 | Dotfiles | Start from the configs on the author's laptop. No upstream. |
-| Upstream tracking | Optional. Deterministic rename transform re-applied after each merge. Never automatic. |
+| Upstream tracking | None. The shell and greeter do not follow the projects they were forked from (decided 2026-10-16). |
 | Performance | Consume the CachyOS repositories: kernel, optimized v3/v4 packages, cachyos-settings, ananicy-cpp. Stock `linux` kept as fallback. |
 
 ## 3. Repositories
 
 ### 3.1 chiroptera-shell
 
-C++23, Meson, MIT. Remotes: `origin` is the author's hosting (GitHub now,
-Gitea later), `upstream` is fetch only, no tags.
+C++23, Meson, MIT. Remote: `origin` is the author's hosting (GitHub now,
+Gitea later). It also holds the greeter, `greeter/`, its own Meson project.
 
-The transform `chiroptera/rename.sh` is applied to every upstream release
-merged in; `chiroptera/check-rename.sh` asserts nothing non-allowlisted
-survives.
+`chiroptera/check-rename.sh` fails if a name of the project the shell was
+forked from appears outside the files allowed to keep it.
 Binary `chiroptera`, config `~/.config/chiroptera/config.toml`, state
 `~/.local/state/chiroptera/`, assets `/usr/share/chiroptera/`, IPC
 `chiroptera msg ...`, D-Bus prefix `dev.chiroptera.`, layer namespaces
 `chiroptera-*`, env vars `CHIROPTERA_*`, desktop entry
 `dev.chiroptera.Chiroptera.desktop`.
 
-Preserved verbatim: web links and API endpoints that exist only upstream, the
-separate greeter package this shell talks to, the author namespace of official
-plugin ids, and any line carrying `<!-- keep -->` (the allowlist is in
-`check-rename.sh`). The Luau host registers the API table under `chiroptera`
-and its compatibility alias.
+The shell calls no web service of the project it was forked from; plugins
+come only from local and user-added sources. The few old names installed
+systems still hold, such as the plugin API's former global, live in
+`src/legacy/legacy_names.h`. The Luau host registers the API table under
+`chiroptera` and that compatibility alias.
 
 ### 3.2 chiroptera-dots
 
@@ -89,41 +88,39 @@ ChiropteraOS/
   iso/                        archiso profile, based on releng
   scripts/                    build helpers, hardware detection tests
   .github/workflows/          packages, iso, nightly tests
-  docs/                       specs, plans, sync ritual, checklists
+  legacy/names.sh             the old names installed systems still hold
+  docs/                       specs, plans, checklists
 ```
 
-### 3.4 Upstream sync
+### 3.4 No upstream
 
-`chiroptera-shell` carries the deterministic transform and its check. Syncing
-applies the transform to upstream's tree on a branch and merges that, so the
-rename itself never conflicts; only upstream edits adjacent to renamed text
-do. The ritual is written in `docs/upstream-sync.md`. Nothing is automatic:
-the author decides when an upstream change is worth taking. The last merged
-upstream commit is recorded in `.upstream-sync`.
+None of the three repositories follows another project. The shell and greeter
+were forked once; nothing is merged from their origins any more. Each repository
+has a check that fails if one of the old names comes back outside its single
+legacy-names place (`src/legacy/legacy_names.h` in the shell,
+`legacy/names.sh` here, none at all in chiroptera-dots).
 
 Moving hosting to Gitea is `git remote set-url origin` per repo plus a CI
 target change.
 
 ## 4. Chiroptera Shell
 
-### 4.1 What the transform touches
+### 4.1 Naming
 
-Upstream's tree names itself in about 5,000 places across 580 files: Meson
-project and targets, C++ identifiers, D-Bus interface names, XDG directory
-names, env vars used by hooks and templates, the Luau API table,
+Everything carries the `chiroptera` name: Meson project and targets, C++
+identifiers, D-Bus interface names (`dev.chiroptera.*`), XDG directory names,
+env vars used by hooks and templates (`CHIROPTERA_*`), the Luau API table,
 translations, docs, the desktop entry, the logo and font asset file names, and
-the tests. The transform renames all of it to `chiroptera` (`dev.chiroptera.*`,
-`CHIROPTERA_*`) except the preserved names in 3.1, replaces the documentation
-with Chiroptera's own, then the Meson test suite must pass and the shell must
-start under Hyprland.
+the tests. The Meson test suite must pass and the shell must start under
+Hyprland.
 
 ### 4.2 Plugin API alias
 
 `src/scripting/luau_host.cpp` registers the base library under `chiroptera`
-and additionally binds the upstream global name to the same table. Plugin
-manifests keep their `plugin_api` levels; `docs/plugin-api.json` is renamed
-in content only. Official and community plugin sources stay where they are
-published and keep working unchanged.
+and additionally binds the plugin API's former global name, from
+`src/legacy/legacy_names.h`, to the same table. Plugin manifests keep their
+`plugin_api` levels. Plugins already installed keep working from their
+installed copies; new ones come from local and user-added sources.
 
 ### 4.3 Bar and panels
 
@@ -153,8 +150,8 @@ generated from the wallpaper.
 ### 4.6 Later native work
 
 Anything the plugin API cannot express (new surfaces, custom drawing, new
-Wayland protocol use) is C++ in `chiroptera-shell`, kept in new files where
-possible to ease upstream merges. None is planned for the first release.
+Wayland protocol use) is C++ in `chiroptera-shell`. None is planned for the
+first release.
 
 ## 5. Dotfiles and user provisioning
 
@@ -198,10 +195,11 @@ them and a pre-commit hook that rejects files matching a secret pattern list.
 |---|---|---|
 | chiroptera-shell | chiroptera-shell tag | the `chiroptera` binary, `/usr/share/chiroptera/`, desktop entry, completions |
 | chiroptera-dots | chiroptera-dots tag | `/usr/share/chiroptera/dots`, `/etc/skel` entries, `chiroptera-dots` apply script |
-| chiroptera-meta | none | depends on everything a desktop needs, including linux-cachyos, cachyos-settings, ananicy-cpp, scx-manager, the greeter |
+| chiroptera-greeter | chiroptera-shell tag, `greeter/` | the greetd login screen: greeter, its wlroots compositor, session wrapper, appearance-sync helper |
+| chiroptera-meta | none | depends on everything a desktop needs, including linux-cachyos, cachyos-settings, ananicy-cpp, scx-manager |
 | chiroptera-hwd | ChiropteraOS | hardware detection script and service |
 | chiroptera-calamares-config | ChiropteraOS | Calamares settings, modules, branding |
-| rebuilt AUR deps | AUR | calamares, the greeter, and anything else the meta package pulls from AUR |
+| rebuilt AUR deps | AUR | calamares, and anything else the meta package pulls from AUR |
 
 The shell PKGBUILD pins a git tag and builds with Meson (`just` recipes are
 not required; plain `meson setup` and `meson install` suffice). A release is:
@@ -241,7 +239,7 @@ pointing step 5 at Gitea's Arch package registry.
 
 Based on archiso `releng`. Changes:
 
-- `packages.x86_64` adds hyprland, greetd, the greeter, chiroptera-meta,
+- `packages.x86_64` adds hyprland, greetd, chiroptera-greeter, chiroptera-meta,
   chiroptera-shell, chiroptera-dots, chiroptera-hwd, calamares,
   chiroptera-calamares-config, linux-firmware, and the NVIDIA and AMD driver
   packages so the live session works on both.
@@ -371,7 +369,8 @@ trust chain. Rollback is removing the repo entries and running
 6. ISO with live desktop, greetd autologin, and Calamares; VM install end to
    end.
 7. AI sidebar plugin.
-8. Upstream sync script and weekly routine; greeter rebrand.
+8. Greeter rebrand: `chiroptera-greeter`. Done 2026-10-16, when the shell
+   also stopped following the project it was forked from.
 
 Steps 1 to 6 produce a bootable image that reinstalls the author's machine
 with Chiroptera Shell. Each step gets its own implementation plan.

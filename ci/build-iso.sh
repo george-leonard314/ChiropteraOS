@@ -21,7 +21,8 @@ BLACKARCH_KEYS=(8F9A9793CB8591147C2EC70566E0CDBD1E01F333 A0917C4147A37007CB54C1C
 
 pacman -Sy --noconfirm --needed archiso >/dev/null
 
-# [cachyos] supplies the greeter and [blackarch] the installer; trust their keys.
+# [blackarch] supplies the installer; trust its keys and those of [cachyos],
+# which iso/pacman.conf also lists (the greeter it once supplied is built here).
 pacman-key --init &>/dev/null
 for key in "$CACHYOS_KEY" "${BLACKARCH_KEYS[@]}"; do
     if ! pacman-key --list-keys "$key" &>/dev/null; then

@@ -28,7 +28,7 @@ suite and a real apply in a container run in CI. See `docs/hwd.md`.
 | 5 | Applied to the laptop; after-benchmarks wait on the flaky-TSC fix (`tsc=reliable`) |
 | 6 | Done bar CI: the ISO builds and installs end to end in QEMU (`iso/`, `calamares/`, `boot/`; see `docs/iso.md`). Hardware test and an ISO workflow remain |
 | 7 | The AI sidebar plugin |
-| 8 | Upstream sync tooling and the greeter rebrand |
+| 8 | Done: the greeter is ChiropteraOS's own `chiroptera-greeter`, and the shell no longer follows the project it was forked from (no upstream sync) |
 
 Step 4's build half is done: `.github/workflows/packages.yml` builds all four
 packages in an Arch container, proves the result installable, and uploads a

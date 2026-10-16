@@ -1,0 +1,72 @@
+# chiroptera-greeter replaces the greeter package ChiropteraOS shipped before
+# it (named in legacy-names.sh). That package kept its state, the greetd
+# command line and the passwordless-sync rule under its own name, and
+# chiroptera-greeter reads none of them, so carry them over first. Each step
+# does nothing once done, and nothing on a machine that never had it.
+
+_new_state=/var/lib/chiroptera-greeter
+
+# Settings and the synced appearance: move the old state directory, keeping
+# its owner and mode, unless the new one already holds something.
+_migrate_state() {
+  local old=/var/lib/$LEGACY_GREETER
+  [[ -d $old && ! -L $old ]] || return 0
+  if [[ -e $_new_state ]] && ! rmdir "$_new_state" 2>/dev/null; then
+    echo "==> $_new_state already exists; left $old as it was"
+    return 0
+  fi
+  mv "$old" "$_new_state"
+  echo "==> moved the login screen's settings from $old to $_new_state"
+}
+
+# greetd runs whatever command config.toml names. The old session wrapper is
+# gone with its package, so without this the login screen would not start.
+_migrate_greetd() {
+  local f=/etc/greetd/config.toml
+  [[ -f $f ]] && grep -q -e "$LEGACY_GREETER" -e "$LEGACY_GREETER_ENV_PREFIX" "$f" || return 0
+  cp -a "$f" "$f.pre-chiroptera-greeter"
+  sed -i -e "s|$LEGACY_GREETER|chiroptera-greeter|g" \
+         -e "s|$LEGACY_GREETER_ENV_PREFIX|CHIROPTERA_GREETER_|g" "$f"
+  echo "==> $f now starts chiroptera-greeter (the old file is $f.pre-chiroptera-greeter)"
+}
+
+# The old rule authorizes a Polkit action that no longer exists. Enabling
+# passwordless sync is the administrator's choice per account, so it is not
+# re-enabled here.
+_migrate_sync_rule() {
+  local rule=/etc/polkit-1/rules.d/$LEGACY_GREETER_SYNC_RULE
+  [[ -e $rule ]] || return 0
+  rm -f "$rule"
+  echo "==> removed $rule; to sync from the shell without a password again:"
+  echo "    sudo chiroptera-greeter passwordless-sync enable USER"
+}
+
+_migrate() {
+  local names=/usr/share/chiroptera-greeter/legacy-names.sh
+  [[ -r $names ]] || return 0
+  # shellcheck source=../../legacy/names.sh
+  . "$names"
+  _migrate_state
+  _migrate_greetd
+  _migrate_sync_rule
+}
+
+# Patch greetd's PAM stack for XDG_RUNTIME_DIR, prepare the state directory and
+# write greeter.toml and sync.toml where missing. Its own greetd hint is for
+# plain installs; chiroptera-boot's command is the one to use here.
+_setup() {
+  [[ -x /usr/bin/chiroptera-greeter-apply-appearance ]] || return 0
+  CHIROPTERA_GREETER_SESSION_BIN=/usr/bin/chiroptera-greeter-session \
+    /usr/share/chiroptera-greeter/setup_greeter_system.sh >/dev/null || true
+}
+
+post_install() {
+  _migrate
+  _setup
+}
+
+post_upgrade() {
+  _migrate
+  _setup
+  echo "==> chiroptera-greeter was updated; it takes effect the next time greetd starts it."
+}

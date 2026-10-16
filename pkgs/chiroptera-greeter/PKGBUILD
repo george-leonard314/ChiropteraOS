@@ -1,0 +1,52 @@
+# Maintainer: George (ChiropteraOS)
+
+# The greeter package this one replaces: legacy/names.sh, two levels up.
+. "$startdir/../../legacy/names.sh"
+
+pkgname=chiroptera-greeter
+# Built from greeter/ in the Chiroptera Shell repository, at the shell's tag.
+_srcname=chiroptera-shell
+pkgver=1.6.0
+_tag=v5.2.0-chiroptera3
+pkgrel=1
+pkgdesc='A minimal login greeter for greetd that matches the look and feel of Chiroptera Shell'
+arch=('x86_64')
+url='https://github.com/george-leonard314/chiroptera-shell'
+license=('MIT')
+options=('!debug')
+depends=(
+  'cairo' 'dbus' 'fontconfig' 'freetype2' 'gcc-libs' 'glib2' 'glibc' 'greetd' 'libglvnd'
+  'libinput' 'librsvg' 'libwebp' 'libxkbcommon' 'libxml2' 'pango' 'tomlplusplus' 'wayland'
+  'wlroots0.20'
+)
+makedepends=('meson' 'ninja' 'nlohmann-json' 'pkgconf' 'stb' 'wayland-protocols')
+optdepends=('polkit: wallpaper and palette sync from Chiroptera Shell'
+            'xorg-xinit: X11 sessions')
+install=chiroptera-greeter.install
+# An installed system with the old greeter swaps it for this one on upgrade;
+# chiroptera-greeter.install carries its state and greetd command line over.
+provides=("$LEGACY_GREETER")
+conflicts=("$LEGACY_GREETER")
+replaces=("$LEGACY_GREETER")
+# Override with a local clone for development builds, e.g. file:///home/g/git/chiroptera-shell
+_repo="${CHIROPTERA_SHELL_REPO:-$url.git}"
+source=("${_srcname}::git+${_repo}#tag=${_tag}")
+sha256sums=('SKIP')
+
+build() {
+  # arch-meson's plain buildtype: the greeter's release buildtype adds
+  # -march=native, which would tie the package to the build machine's CPU.
+  arch-meson "${_srcname}/greeter" build
+  meson compile -C build
+}
+
+package() {
+  meson install -C build --destdir "${pkgdir}"
+
+  # Read by chiroptera-greeter.install when it carries an old install over.
+  install -Dm644 "$startdir/../../legacy/names.sh" \
+    "${pkgdir}/usr/share/chiroptera-greeter/legacy-names.sh"
+
+  install -Dm644 "${_srcname}/greeter/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm644 "${_srcname}/greeter/README.md" "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+}

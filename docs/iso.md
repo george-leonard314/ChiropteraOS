@@ -30,9 +30,11 @@ now unmounts everything under the work directory first and deletes with
 ## How the pieces fit
 
 - **The live image is plain x86-64 Arch** with the stock `linux` kernel, so
-  it boots in virtual machines and on CPUs without AVX2. Only what Arch lacks
-  (the login screen's greeter) comes from `[cachyos]`, which sits after Arch's
-  repositories in the build's `pacman.conf`. Calamares comes from
+  it boots in virtual machines and on CPUs without AVX2. What Arch lacks
+  comes from this repository's own packages, the login screen's
+  `chiroptera-greeter` included; `[cachyos]`, after Arch's repositories in the
+  build's `pacman.conf`, no longer supplies anything the image installs.
+  Calamares comes from
   `[blackarch]`, last: CachyOS's `cachyos-calamares` is linked against
   Boost 1.91, which both Arch and CachyOS have replaced with 1.92, so it
   does not start. BlackArch's build does not use Boost. Because that package
@@ -120,16 +122,27 @@ now unmounts everything under the work directory first and deletes with
 - **GRUB:** the author's Dark Matter theme (VandalByte, GPL-3.0), installed
   to `/usr/share/grub/themes/darkmatter`. The installer's `grubcfg` sets
   `GRUB_THEME` to it.
-- **Login screen:** the greeter package `chiroptera-boot` depends on, with
-  the bat logo. greetd starts it with its assets directory set to
-  `/usr/share/chiroptera/greeter/assets`, a bundle holding the bat under the
-  logo file name the greeter looks for plus the greeter's own icon font (see
-  `pkgs/chiroptera-boot/PKGBUILD`). On first install the package seeds the
-  greeter's state directory under `/var/lib/` with `sync.toml` (the
+- **Login screen:** `chiroptera-greeter`, which `chiroptera-boot` depends on,
+  built from `greeter/` in the chiroptera-shell repository, with the bat logo.
+  greetd runs
+  `env CHIROPTERA_GREETER_ASSETS_DIR=/usr/share/chiroptera/greeter/assets /usr/bin/chiroptera-greeter-session`:
+  the assets directory is a bundle holding the bat as `chiroptera.svg` plus a
+  link to the greeter's own icon font (see `pkgs/chiroptera-boot/PKGBUILD`).
+  On first install the package seeds the greeter's state directory
+  `/var/lib/chiroptera-greeter` with `sync.toml` (the
   Chiroptera palette and wallpaper) and `greeter.toml` (default session
-  Hyprland). Appearance lives in `sync.toml` on purpose:
+  ChiropteraOS). Appearance lives in `sync.toml` on purpose:
   the shell's **Settings -> Security -> Greeter -> Sync Now** writes there,
   and a palette in `greeter.toml` would override it for good.
+
+  Machines installed before `chiroptera-greeter` ran the greeter package it
+  replaces (`provides`/`conflicts`/`replaces`; the old name is in
+  `legacy/names.sh`). On that upgrade `chiroptera-greeter.install` moves the
+  old state directory to `/var/lib/chiroptera-greeter`, rewrites
+  `/etc/greetd/config.toml` to start `chiroptera-greeter-session` (keeping the
+  old file as `config.toml.pre-chiroptera-greeter`), and removes the old
+  passwordless-sync Polkit rule, whose action no longer exists; re-enable it
+  with `sudo chiroptera-greeter passwordless-sync enable USER`.
 
 ## Calamares configuration
 

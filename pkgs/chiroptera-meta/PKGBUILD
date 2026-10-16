@@ -1,7 +1,7 @@
 # Maintainer: George (ChiropteraOS)
 
 pkgname=chiroptera-meta
-pkgver=0.1.14
+pkgver=0.1.15
 pkgrel=1
 pkgdesc='Everything a ChiropteraOS desktop needs'
 arch=('any')
@@ -60,7 +60,7 @@ depends=(
 # is invested in either, so they are not part of the ChiropteraOS package set.
 optdepends=('superproductivity: todo'
             'zen-browser-bin: the browser that follows the wallpaper palette'
-            'noctalia-greeter: greetd login screen themed by the shell'
+            'chiroptera-greeter: greetd login screen themed by the shell'
 )
 provides=('chiroptera-meta')
 # chiroptera-wifi-secrets 0.1.0 and chiroptera-zen-theme 0.1.0 shipped the
@@ -97,7 +97,11 @@ package() {
     # Gecko reads autoconfig only from the install directory. zen-browser-bin
     # owns neither file, so its upgrades leave them in place.
     install -Dm644 "$srcdir/autoconfig.js" "$pkgdir/opt/zen-browser-bin/defaults/pref/autoconfig.js"
-    install -Dm644 "$srcdir/chiroptera-zen.cfg" "$pkgdir/opt/zen-browser-bin/chiroptera-zen.cfg"
+    # The palette's former cache directory comes from legacy/names.sh, two levels up.
+    local LEGACY_CACHE_NAME
+    LEGACY_CACHE_NAME=$(. "$startdir/../../legacy/names.sh" && printf '%s' "$LEGACY_CACHE_NAME")
+    sed "s|@LEGACY_CACHE_NAME@|$LEGACY_CACHE_NAME|" "$srcdir/chiroptera-zen.cfg" \
+        | install -Dm644 /dev/stdin "$pkgdir/opt/zen-browser-bin/chiroptera-zen.cfg"
 
     install -Dm644 "$srcdir/mimeapps.list" "$pkgdir/etc/xdg/mimeapps.list"
 }

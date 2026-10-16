@@ -1,5 +1,5 @@
 # Administrator settings for the login screen, seeded into
-# /var/lib/noctalia-greeter/greeter.toml on first install only. Appearance is
+# /var/lib/chiroptera-greeter/greeter.toml on first install only. Appearance is
 # left to sync.toml so the shell's Sync can change it.
 
 # ChiropteraOS, not Hyprland: that session starts Hyprland without

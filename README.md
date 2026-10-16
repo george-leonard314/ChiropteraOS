@@ -32,6 +32,7 @@ Three repositories make it up:
 | Package | From |
 |---|---|
 | `chiroptera-shell` | a chiroptera-shell tag, built with Meson |
+| `chiroptera-greeter` | the same tag's `greeter/`: the greetd login screen, built with Meson |
 | `chiroptera-dots` | a chiroptera-dots tag |
 | `chiroptera-meta` | this repository: depends on everything a desktop needs |
 | `chiroptera-hwd` | `hwd/` |
@@ -72,15 +73,39 @@ hwd/                   chiroptera-hwd and its bats suite
 boot/                  GRUB theme, greeter config, the ChiropteraOS session
 iso/                   archiso profile
 calamares/             installer settings, modules, branding, staged files
-ci/                    container builds, lint, smoke and hwd tests, ISO build
-docs/                  hwd, iso, repository, status, shell sync, design specs
+ci/                    container builds, lint, name check, smoke and hwd tests, ISO build
+legacy/names.sh        the only place the names of the projects the shell and greeter
+                       were forked from may appear (see ci/check-names.sh)
+docs/                  hwd, iso, repository, status, design specs
 ```
 
 ## Releasing
 
 Tag the source repository, bump `pkgver` (and `_tag`) in its PKGBUILD here,
-push. CI rebuilds what changed. For the shell, `docs/upstream-sync.md` is the
-whole procedure.
+push. CI rebuilds what changed.
+
+For the shell, tags are `v<version>-chiroptera<N>` and `pkgver` is the tag
+without the leading `v` and with `-` replaced by `.` (`v5.2.0-chiroptera3`
+becomes `5.2.0.chiroptera3`). `chiroptera-greeter` builds from the same tag:
+move its `_tag` along with the shell's, and bump its `pkgver` to the version in
+`greeter/meson.build`, or its `pkgrel` when only the tag moved. Push the tag by
+name, push this repository so CI rebuilds, install, then check the laptop:
+
+```sh
+pkill -x chiroptera; chiroptera --daemon
+hyprctl layers | grep -o 'namespace: chiroptera-[a-z-]*' | sort -u   # bar, panel, wallpaper
+chiroptera --version
+```
+
+and by hand: tap Super (launcher opens), Super+period (settings opens), a
+special-workspace key (the app opens in it), and log out once to see the
+login screen.
+
+The shell and the greeter no longer follow the projects they were forked
+from. `ci/check-names.sh` (run in CI's lint job) fails if one of those names
+shows up anywhere but `legacy/names.sh`, which holds the few that installed
+systems still carry: the greeter package `chiroptera-greeter` replaces, and the
+cache directory an already installed Zen palette template writes into.
 
 ## License
 

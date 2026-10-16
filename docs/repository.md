@@ -17,6 +17,7 @@ repository has to carry it.
 | `evdi-dkms` | x86_64 | Public GitHub tarball, vendored from the AUR |
 | `displaylink` | x86_64 | Synaptics download, vendored from the AUR — **proprietary** |
 | `chiroptera-shell` | x86_64 | Private repository, tag `v5.0.1-chiroptera4` |
+| `chiroptera-greeter` | x86_64 | `greeter/` of the `chiroptera-shell` repository, at the shell's tag |
 | `chiroptera-dots` | any | Private repository, tag `v0.1.0` |
 | `chiroptera-meta` | any | This repository |
 | `chiroptera-hwd` | any | This repository |
@@ -47,11 +48,11 @@ so the snippet ships `SigLevel = Never`.
 ## How CI works
 
 `.github/workflows/packages.yml` runs on pushes to `main` that touch `pkgs/`,
-`ci/` or the workflow itself, on pull requests, and on manual dispatch.
+`ci/`, `hwd/`, `legacy/` or the workflow itself, on pull requests, and on manual dispatch.
 
 | Job | What it does |
 |---|---|
-| `lint` | Every PKGBUILD parses and yields metadata. Runs on pull requests too. |
+| `lint` | Every PKGBUILD parses and yields metadata, and `ci/check-names.sh` finds no upstream name outside `legacy/names.sh`. Runs on pull requests too. |
 | `build` | Builds what is missing, prunes, writes the database, uploads `repo/`. |
 | `publish` | Inert. See "Publishing" below. |
 
@@ -63,7 +64,7 @@ The build is incremental: a package is built only when its exact
 Actions cache. Losing that cache costs a full rebuild, never correctness.
 
 Only the packages that build something have their dependencies synced:
-`chiroptera-shell`, `pacseek` and `evdi-dkms` compile, and `app2unit`
+`chiroptera-shell`, `chiroptera-greeter`, `pacseek` and `evdi-dkms` compile, and `app2unit`
 renders man pages with `scdoc`. `chiroptera-dots`
 and `chiroptera-meta` build with `--nodeps`: they have no `build()` at all, so
 installing their runtime dependencies would pull hundreds of megabytes into the

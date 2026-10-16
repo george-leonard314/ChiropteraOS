@@ -1,5 +1,5 @@
 # Chiroptera look for the login screen, seeded into
-# /var/lib/noctalia-greeter/sync.toml on first install only. Colours: the
+# /var/lib/chiroptera-greeter/sync.toml on first install only. Colours: the
 # shell's "vibrant" palette of the default Chiroptera wallpaper. The shell's
 # Settings -> Security -> Greeter -> Sync Now replaces them with your own.
 

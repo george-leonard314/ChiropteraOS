@@ -52,7 +52,7 @@ dkms
 linux-headers
 # Desktop
 greetd
-noctalia-greeter
+chiroptera-greeter
 chiroptera-boot
 chiroptera-meta
 chiroptera-hwd

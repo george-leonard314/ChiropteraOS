@@ -2,8 +2,8 @@
 
 pkgname=chiroptera-dots
 _srcname=chiroptera-dots
-pkgver=0.1.17
-_tag=v0.1.17
+pkgver=0.1.18
+_tag=v0.1.18
 pkgrel=1
 pkgdesc='ChiropteraOS dotfiles: Hyprland, Chiroptera Shell, fish, foot, fastfetch'
 arch=('any')
