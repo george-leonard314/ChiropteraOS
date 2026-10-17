@@ -1,7 +1,7 @@
 # Maintainer: George (ChiropteraOS)
 
 pkgname=chiroptera-meta
-pkgver=0.1.15
+pkgver=0.1.16
 pkgrel=1
 pkgdesc='Everything a ChiropteraOS desktop needs'
 arch=('any')
@@ -23,6 +23,9 @@ depends=(
   # Package search and install in the terminal
   # pacseek is vendored from the AUR into pkgs/pacseek; see docs/repository.md.
   'pacseek'
+  # Wallpaper Engine wallpapers: the W Engine plugin (enabled in chiroptera-dots)
+  # plays them through it. Vendored from the AUR into pkgs/linux-wallpaperengine-git.
+  'linux-wallpaperengine'
   # checkupdates, which the bar's update counter (the arch-updater plugin,
   # enabled in chiroptera-dots) needs to count pending updates
   'pacman-contrib'

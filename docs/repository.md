@@ -14,6 +14,7 @@ repository has to carry it.
 |---|---|---|
 | `app2unit` | any | Public GitHub tarball, vendored from the AUR |
 | `pacseek` | any | Public GitHub tarball, vendored from the AUR |
+| `linux-wallpaperengine-git` | x86_64 | Public GitHub repository at a pinned commit, vendored from the AUR |
 | `evdi-dkms` | x86_64 | Public GitHub tarball, vendored from the AUR |
 | `displaylink` | x86_64 | Synaptics download, vendored from the AUR — **proprietary** |
 | `chiroptera-shell` | x86_64 | Private repository, tag `v5.0.1-chiroptera4` |
@@ -64,7 +65,7 @@ The build is incremental: a package is built only when its exact
 Actions cache. Losing that cache costs a full rebuild, never correctness.
 
 Only the packages that build something have their dependencies synced:
-`chiroptera-shell`, `chiroptera-greeter`, `pacseek` and `evdi-dkms` compile, and `app2unit`
+`chiroptera-shell`, `chiroptera-greeter`, `pacseek`, `linux-wallpaperengine-git` and `evdi-dkms` compile, and `app2unit`
 renders man pages with `scdoc`. `chiroptera-dots`
 and `chiroptera-meta` build with `--nodeps`: they have no `build()` at all, so
 installing their runtime dependencies would pull hundreds of megabytes into the

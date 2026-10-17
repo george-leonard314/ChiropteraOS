@@ -37,7 +37,7 @@ Three repositories make it up:
 | `chiroptera-meta` | this repository: depends on everything a desktop needs |
 | `chiroptera-hwd` | `hwd/` |
 | `chiroptera-boot` | `boot/`: GRUB theme, login screen, session |
-| `app2unit`, `pacseek`, `evdi-dkms`, `displaylink` | vendored from the AUR, because `pacman` cannot resolve AUR-only dependencies |
+| `app2unit`, `pacseek`, `linux-wallpaperengine-git`, `evdi-dkms`, `displaylink` | vendored from the AUR, because `pacman` cannot resolve AUR-only dependencies |
 
 `.github/workflows/packages.yml` builds them in a clean Arch container, proves
 `chiroptera-meta` installable, and uploads a ready-to-serve repository. Where

@@ -1,0 +1,61 @@
+# Maintainer: George (ChiropteraOS)
+#
+# Vendored from the AUR `linux-wallpaperengine-git` package by Alexis Maiquez
+# <aur@almamu.com>. ChiropteraOS changes: the source is pinned to one upstream
+# commit (the AUR builds whatever main is at build time), so pkgver is fixed
+# and the pkgver() function is left out.
+# ChiropteraOS carries it because chiroptera-meta depends on it (the W Engine
+# shell plugin in chiroptera-dots plays Wallpaper Engine wallpapers through it)
+# and an AUR-only dependency cannot be resolved by `pacman -S chiroptera-meta`.
+#
+# The build downloads a prebuilt CEF (Chromium, for web wallpapers) during
+# cmake; that is most of the 330 MiB it installs.
+#
+# To update: move _commit and pkgver (r<commit count>.<short hash>) together,
+# and compare against
+# https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=linux-wallpaperengine-git
+
+pkgname=linux-wallpaperengine-git
+_pkgname=linux-wallpaperengine
+_commit=b016d7d1fdcf4e5fd2f9c9fa420a8aaa07fee02d
+pkgver=r627.b016d7d1
+pkgrel=1
+pkgdesc="use steam's wallpaperengine on linux"
+arch=('x86_64')
+url="https://github.com/Almamu/linux-wallpaperengine"
+license=('GPL-3.0-only')
+depends=('lz4' 'ffmpeg' 'mpv' 'glfw' 'glew' 'freeglut' 'libpulse' 'libcups' 'at-spi2-core' 'nss' 'libxcomposite' 'libxdamage' 'nspr')
+makedepends=('git' 'cmake' 'sdl2' 'glm' 'wayland-protocols' 'xorg-xrandr')
+provides=("linux-wallpaperengine")
+conflicts=("linux-wallpaperengine")
+source=("${pkgname}::git+https://github.com/Almamu/linux-wallpaperengine.git#commit=${_commit}")
+sha512sums=('SKIP')
+
+prepare() {
+    cd "$pkgname"
+    git submodule update --init --recursive
+    git -c protocol.file.allow=always submodule update
+}
+
+build() {
+    cmake -B build -S "$pkgname" \
+        -DCMAKE_BUILD_TYPE='Release' \
+        -DCMAKE_INSTALL_PREFIX="/opt/${_pkgname}" \
+        -Wno-dev \
+        -DCMAKE_CXX_FLAGS="-ffat-lto-objects -Wno-builtin-macro-redefined" \
+        -DCMAKE_C_FLAGS="-Wno-builtin-macro-redefined"
+    cmake --build build
+}
+
+package() {
+    DESTDIR="$pkgdir" cmake --install build
+    # create forwarding script
+    install -d -m755 "${pkgdir}/usr/bin"
+    cat > "${pkgdir}/usr/bin/${_pkgname}" << EOF
+#!/bin/bash
+export LD_LIBRARY_PATH="/opt/${_pkgname}/lib:\$LD_LIBRARY_PATH"
+cd /opt/${_pkgname}; exec ./${_pkgname} "\$@"
+EOF
+    chmod +x ${pkgdir}/usr/bin/${_pkgname}
+    chmod +x ${pkgdir}/opt/${_pkgname}/linux-wallpaperengine
+}

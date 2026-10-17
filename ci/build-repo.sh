@@ -17,11 +17,12 @@ FORCE_REBUILD=${FORCE_REBUILD:-0}
 
 # Dependencies before dependents. Overridable so a local run can exercise the
 # script without recompiling the shell.
-read -r -a packages <<<"${PACKAGES:-app2unit pacseek evdi-dkms displaylink chiroptera-shell chiroptera-greeter chiroptera-dots chiroptera-meta chiroptera-hwd chiroptera-boot}"
+read -r -a packages <<<"${PACKAGES:-app2unit pacseek linux-wallpaperengine-git evdi-dkms displaylink chiroptera-shell chiroptera-greeter chiroptera-dots chiroptera-meta chiroptera-hwd chiroptera-boot}"
 
 # Dependency handling, per package:
 #
-#   --syncdeps  chiroptera-shell, chiroptera-greeter and pacseek compile;
+#   --syncdeps  chiroptera-shell, chiroptera-greeter, pacseek and
+#               linux-wallpaperengine-git compile;
 #               app2unit renders man pages with scdoc; evdi-dkms builds its
 #               library and pyevdi bindings. All genuinely need their
 #               makedepends installed.
@@ -43,6 +44,7 @@ read -r -a packages <<<"${PACKAGES:-app2unit pacseek evdi-dkms displaylink chiro
 declare -A extra_flags=(
     [app2unit]="--syncdeps"
     [pacseek]="--syncdeps"
+    [linux-wallpaperengine-git]="--syncdeps"
     [evdi-dkms]="--syncdeps"
     [displaylink]="--nodeps"
     [chiroptera-shell]="--syncdeps"
