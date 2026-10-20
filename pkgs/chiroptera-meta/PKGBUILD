@@ -51,7 +51,8 @@ depends=(
   'nwg-displays' 'nano'
   # Look and feel
   # Repo names, not the AUR -kde variants: those provide these, so both satisfy it.
-  'adw-gtk-theme' 'papirus-icon-theme' 'qt5ct' 'qt6ct'
+  # candy-icons is vendored from the AUR into pkgs/candy-icons; see docs/repository.md.
+  'adw-gtk-theme' 'candy-icons' 'papirus-icon-theme' 'qt5ct' 'qt6ct'
   'ttf-hack-nerd' 'noto-fonts' 'noto-fonts-cjk' 'noto-fonts-emoji'
   'ttf-material-symbols-variable'
   # Sound effects used by the fish error hook

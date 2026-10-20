@@ -1,0 +1,34 @@
+# Maintainer: George (ChiropteraOS)
+#
+# Vendored from the AUR `candy-icons-git` package by Darvin Delgado
+# <dnmodder at gmail dot com>, adapted for ChiropteraOS.
+# ChiropteraOS carries it because chiroptera-meta depends on candy-icons and an
+# AUR-only dependency cannot be resolved by `pacman -S chiroptera-meta`.
+#
+# Upstream source is a public git repository, so this package needs no deploy token.
+#
+# To update: compare against
+# https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=candy-icons-git
+
+_pkgname=candy-icons
+pkgname=candy-icons
+pkgver=r595.7a29005
+pkgrel=1
+pkgdesc='Sweet gradient icons'
+arch=('any')
+url='https://github.com/EliverLara/candy-icons'
+license=('GPL-3.0-only')
+options=('!strip')
+provides=('candy-icons')
+conflicts=('candy-icons-git')
+source=("${_pkgname}::git+${url}.git#commit=83512fbcadcb7e1015ebbe1729a1894946b021be")
+sha256sums=('SKIP')
+
+package() {
+    install -dm755 "${pkgdir}/usr/share/icons"
+    cp -a "${_pkgname}" "${pkgdir}/usr/share/icons/"
+    rm -rf "${pkgdir}/usr/share/icons/${_pkgname}/.git"
+    rm -rf "${pkgdir}/usr/share/icons/${_pkgname}/.github"
+    find "${pkgdir}/usr" -type f -exec chmod 644 {} \;
+    find "${pkgdir}/usr" -type d -exec chmod 755 {} \;
+}

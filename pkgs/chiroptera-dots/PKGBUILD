@@ -48,6 +48,10 @@ package() {
     [[ -e $tree/hypr/hyprland/user.conf ]] \
       || printf '# Personal Hyprland overrides; sourced last.\n' \
          | install -m644 /dev/stdin "$tree/hypr/hyprland/user.conf"
+    # The shell's Hyprland theme template replaces this with the palette borders.
+    [[ -e $tree/hypr/chiroptera.conf ]] \
+      || printf '# Rendered by the Chiroptera Hyprland theme template.\n' \
+         | install -m644 /dev/stdin "$tree/hypr/chiroptera.conf"
   done
   install -dm755 "$pkgdir/usr/share/chiroptera/branding"
   install -m644 branding/*.svg "$pkgdir/usr/share/chiroptera/branding/"

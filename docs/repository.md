@@ -14,6 +14,7 @@ repository has to carry it.
 |---|---|---|
 | `app2unit` | any | Public GitHub tarball, vendored from the AUR |
 | `pacseek` | any | Public GitHub tarball, vendored from the AUR |
+| `candy-icons` | any | Public GitHub repository, vendored from the AUR |
 | `linux-wallpaperengine-git` | x86_64 | Public GitHub repository at a pinned commit, vendored from the AUR |
 | `evdi-dkms` | x86_64 | Public GitHub tarball, vendored from the AUR |
 | `displaylink` | x86_64 | Synaptics download, vendored from the AUR — **proprietary** |

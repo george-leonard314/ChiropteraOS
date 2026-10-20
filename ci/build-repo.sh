@@ -17,7 +17,7 @@ FORCE_REBUILD=${FORCE_REBUILD:-0}
 
 # Dependencies before dependents. Overridable so a local run can exercise the
 # script without recompiling the shell.
-read -r -a packages <<<"${PACKAGES:-app2unit pacseek linux-wallpaperengine-git evdi-dkms displaylink chiroptera-shell chiroptera-greeter chiroptera-dots chiroptera-meta chiroptera-hwd chiroptera-boot}"
+read -r -a packages <<<"${PACKAGES:-app2unit pacseek candy-icons linux-wallpaperengine-git evdi-dkms displaylink chiroptera-shell chiroptera-greeter chiroptera-dots chiroptera-meta chiroptera-hwd chiroptera-boot}"
 
 # Dependency handling, per package:
 #
@@ -27,7 +27,7 @@ read -r -a packages <<<"${PACKAGES:-app2unit pacseek linux-wallpaperengine-git e
 #               library and pyevdi bindings. All genuinely need their
 #               makedepends installed.
 #
-#   --nodeps    chiroptera-dots, chiroptera-meta, chiroptera-hwd and
+#   --nodeps    candy-icons, chiroptera-dots, chiroptera-meta, chiroptera-hwd and
 #               chiroptera-boot have no build() at all. Their makedepends are still installed
 #               (chiroptera-dots needs librsvg in package()).
 #               Installing their runtime dependencies would pull hundreds of
@@ -44,6 +44,7 @@ read -r -a packages <<<"${PACKAGES:-app2unit pacseek linux-wallpaperengine-git e
 declare -A extra_flags=(
     [app2unit]="--syncdeps"
     [pacseek]="--syncdeps"
+    [candy-icons]="--nodeps"
     [linux-wallpaperengine-git]="--syncdeps"
     [evdi-dkms]="--syncdeps"
     [displaylink]="--nodeps"
